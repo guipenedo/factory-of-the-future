@@ -1,73 +1,70 @@
-// RSX101 CLIENT TCP
-#include <unistd.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/socket.h>
-#include <pthread.h>
+#include "tcp.h"
 
-
-#include <netinet/in.h>
-#include <arpa/inet.h>
-
-
-#define MAX 80
-#define PORT 8080
-#define SA struct sockaddr
-
-typedef struct ServerData {
-    pthread_cond_t has_command;
-    pthread_mutex_t command_mutex;
-    int commandId;
-    int sockfd;
-    char response[MAX];
-} ServerData;
-
-
-void send_command_to_server(ServerData * data, int commandId, char * response) {
+void send_command_to_server(int commandId, char * response, ClientThreadData * data) {
+    // lock mutex
     pthread_mutex_lock(&(data->command_mutex));
 
+    // set commandId
     data->commandId = commandId;
 
-    pthread_cond_signal(&(data->has_command));
+    // signal that there is a new command to handle
+    pthread_cond_signal(&(data->command_condition));
 
+    if (data->commandId == -1) {
+        pthread_mutex_unlock(&(data->command_mutex));
+        return;
+    }
+
+    // wait for response data write signal
+    pthread_cond_wait(&(data->command_condition), &(data->command_mutex));
+
+    // save response data
     strcpy(response, data->response);
 
+    // unlock mutex
     pthread_mutex_unlock(&(data->command_mutex));
 }
 
 
 void * interact_with_server (void * p_data) {
-    ServerData * data = (ServerData *) p_data;
+    ClientThreadData * data = (ClientThreadData *) p_data;
 
-    char buff[MAX];
+    char buff[MAX_BUFFER_SIZE];
 
     while (1) {
+        // lock the mutex
         pthread_mutex_lock(&(data->command_mutex));
-        pthread_cond_wait(&(data->has_command), &(data->command_mutex));
 
-        // if msg contains "Exit" then server exit and chat ended.
-        if (data->commandId == - 1) {
-            printf("Server Exit...\n");
-            break;
-        }
+        // wait for a command
+        pthread_cond_wait(&(data->command_condition), &(data->command_mutex));
 
-        bzero(buff, MAX);
+        bzero(buff, MAX_BUFFER_SIZE);
         sprintf(buff, "%d", data->commandId);
 
         write(data->sockfd, buff, sizeof(buff));
 
+        // if msg contains "Exit" then server exit and chat ended.
+        if (data->commandId == -1) {
+            printf("Client Exit...\n");
+            pthread_mutex_unlock(&(data->command_mutex));
+            break;
+        }
+
         read(data->sockfd, data->response, sizeof(data->response));
+
+        // signal that the response data is written
+        pthread_cond_signal(&(data->command_condition));
 
         pthread_mutex_unlock(&(data->command_mutex));
     }
+    close(data->sockfd);
+    return NULL;
 }
 
 
-void connect_to_tcp_server(const char * server_addr, ServerData * data) {
+void connect_to_tcp_server(const char * server_addr, ClientThreadData * data) {
     struct sockaddr_in servaddr;
-    pthread_t interact_server_thread;
-    pthread_cond_init(&(data->has_command), NULL);
+    pthread_cond_init(&(data->command_condition), NULL);
     pthread_mutex_init(&(data->command_mutex), NULL);
 
     // socket create and varification
@@ -93,42 +90,6 @@ void connect_to_tcp_server(const char * server_addr, ServerData * data) {
     else
         printf("connected to the server..\n");
 
-    pthread_create(&interact_server_thread, NULL, interact_with_server, data);
-
-    return data;
+    pthread_create(&(data->interact_server_thread), NULL, interact_with_server, data);
 }
-
-int main() {
-    int sockfd;
-    struct sockaddr_in servaddr;
-
-    // socket create and varification
-    sockfd = socket(AF_INET, SOCK_STREAM, 0);
-    if (sockfd == -1) {
-        printf("socket creation failed...\n");
-        exit(0);
-    }
-    else
-        printf("Socket successfully created..\n");
-    bzero(&servaddr, sizeof(servaddr));
-
-    // assign IP, PORT
-    servaddr.sin_family = AF_INET;
-    servaddr.sin_addr.s_addr = inet_addr("192.168.0.37");
-    servaddr.sin_port = htons(PORT);
-
-    // connect the client socket to server socket
-    if (connect(sockfd, (SA*)&servaddr, sizeof(servaddr)) != 0) {
-        printf("connection with the server failed...\n");
-        exit(0);
-    }
-    else
-        printf("connected to the server..\n");
-
-    // function for chat
-    func(sockfd);
-
-    // close the socket
-    close(sockfd);
-} 
 

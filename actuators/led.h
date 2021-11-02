@@ -1,8 +1,8 @@
-#include <stdio.h>
-#include <wiringPi.h>
-
 #ifndef FACTORY_OF_THE_FUTURE_LED_H
 #define FACTORY_OF_THE_FUTURE_LED_H
+
+#include <stdio.h>
+#include <wiringPi.h>
 
 // Define the gpio pin of the LED
 #define LED_PIN 1

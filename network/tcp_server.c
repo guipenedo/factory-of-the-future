@@ -1,38 +1,16 @@
-#include <stdio.h>
-#include <unistd.h>
-#include <netinet/in.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/socket.h>
-#include <arpa/inet.h>
-#include <pthread.h>
-
-#define MAX_CLIENTS 8
-
-#define MAX 80
-
-#define PORT 8080
-#define SA struct sockaddr
-
-#define GET_SENSOR_LIST 0
-#define GET_ACTUATOR_LIST 1
-
-typedef struct ClientThreadArg {
-    void (* func) (int, char *);
-    int connfd;
-} ClientThreadArg;
+#include "tcp.h"
 
 void * serve_client(void * p_data){
-    ClientThreadArg * thread_arg = (ClientThreadArg *) p_data;
+    ServerThreadData * thread_arg = (ServerThreadData *) p_data;
     int connfd = thread_arg->connfd;
-    void (* func) (int, char *) = thread_arg->func;
+    void (* command_handler) (int, char *) = thread_arg->command_handler;
     free(thread_arg);
 
-    char buff[MAX], res_buff[MAX];
+    char buff[MAX_BUFFER_SIZE], res_buff[MAX_BUFFER_SIZE];
     // infinite loop for chat
     while (1) {
-        bzero(buff, MAX);
-        bzero(res_buff, MAX);
+        bzero(buff, MAX_BUFFER_SIZE);
+        bzero(res_buff, MAX_BUFFER_SIZE);
 
         // read the message from client and copy it in buffer
         read(connfd, buff, sizeof(buff));
@@ -40,26 +18,33 @@ void * serve_client(void * p_data){
         // actually handle whatever we have to do
         int commandId;
         int conv = sscanf(buff, "%d", &commandId);
-        if (conv > 0)
-            func(commandId, res_buff);
+        if (conv <= 0)
+            continue;
 
-        // if msg contains "Exit" then server exit and chat ended.
-        if (strncmp("exit", buff, 4) == 0) {
-            printf("Server Exit...\n");
+        if (commandId == -1){
+            printf("Client sent exit. Closing this client's thread...\n");
             break;
         }
 
+        command_handler(commandId, res_buff);
+
         // print buffer which contains the client contents
-        printf("From client: %s\n To client : %s\n", buff, res_buff);
+        printf("From client: %s\nTo client : \"%s\"\n", buff, res_buff);
 
         // and send that buffer to client
         write(connfd, res_buff, sizeof(res_buff));
     }
 
     close(connfd);
+    return NULL;
 }
 
-int accept_tcp_connections(void (* func) (int, char *)) {
+void accept_tcp_connections_non_blocking(void (* func) (int, char *), pthread_t * accept_thread) {
+    if(pthread_create(accept_thread, NULL, accept_tcp_connections, func) != 0)
+        printf("Failed to create server accept thread\n");
+}
+
+void * accept_tcp_connections(void (* func) (int, char *)) {
     pthread_t client_t[MAX_CLIENTS];
 
     int sockfd, client_i = 0;
@@ -69,7 +54,8 @@ int accept_tcp_connections(void (* func) (int, char *)) {
 
     // socket create and verification
     sockfd = socket(AF_INET, SOCK_STREAM, 0);
-    if (sockfd == -1) {
+    // SO_REUSEADDR allows to use same port after a quick restart
+    if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &(int){1}, sizeof(int)) < 0) {
         printf("socket creation failed...\n");
         exit(0);
     } else
@@ -84,7 +70,7 @@ int accept_tcp_connections(void (* func) (int, char *)) {
 
     // Binding newly created socket to given IP and verification
     if ((bind(sockfd, (SA *) &servaddr, sizeof(servaddr))) != 0) {
-        printf("socket bind failed...\n");
+        printf("socket bind failed... error code: %d\n", errno);
         exit(0);
     } else
         printf("Socket successfully binded..\n");
@@ -97,8 +83,8 @@ int accept_tcp_connections(void (* func) (int, char *)) {
         printf("Server listening..\n");
 
     while (1) {
-        ClientThreadArg * args = malloc (sizeof (ClientThreadArg));
-        args->func = func;
+        ServerThreadData * args = malloc (sizeof (ServerThreadData));
+        args->command_handler = func;
         //Accept call creates a new socket for the incoming connection
         len = sizeof serverStorage;
         args->connfd = accept(sockfd, (SA *) &serverStorage, &len);
@@ -116,19 +102,3 @@ int accept_tcp_connections(void (* func) (int, char *)) {
         }
     }
 }
-
-void test_commands (int commandId, char * response){
-    if (commandId == GET_SENSOR_LIST){
-        printf("SENSOR LIST IS HERE\n");
-        strncpy(response, "SENSOR LIST IS HERE", 20);
-    } else if (commandId == GET_ACTUATOR_LIST){
-        printf("ACTUATOR LIST IS HERE\n");
-        strncpy(response, "ACTUATOR LIST IS HERE", 22);
-    }
-}
-
-// Driver function 
-int main() {
-    accept_tcp_connections(test_commands);
-} 
-
