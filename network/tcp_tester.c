@@ -1,6 +1,4 @@
 #include "tcp.h"
-#include <stdio.h>
-#include <string.h>
 
 void handle_command(int commandId, char * response) {
     if (commandId == 0) {
