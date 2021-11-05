@@ -7,7 +7,6 @@ void * serve_client(void * p_data){
     free(thread_arg);
 
     char buff[MAX_BUFFER_SIZE], res_buff[MAX_BUFFER_SIZE];
-    // infinite loop for chat
     while (1) {
         bzero(buff, MAX_BUFFER_SIZE);
         bzero(res_buff, MAX_BUFFER_SIZE);
