@@ -6,13 +6,13 @@ typedef struct SensorData {
 } SensorData;
 
 // this should return 1 if the sensors are available and 0 otherwise
-int has_sensors();
+short has_sensors();
 
 // this should return 1 if the led is available and 0 otherwise
-int has_led();
+short has_led();
 
 // this should return 1 if the relay is available and 0 otherwise
-int has_relay();
+short has_relay();
 
 // this function should edit the SensorData's argument values to those read by the sensor
 void read_sensor_data(SensorData *);
