@@ -3,7 +3,7 @@
 void * serve_client(void * p_data){
     ServerThreadData * thread_arg = (ServerThreadData *) p_data;
     int connfd = thread_arg->connfd;
-    void (* command_handler) (int, char *) = thread_arg->command_handler;
+    void (* command_handler) (int,  char *, char *) = thread_arg->command_handler;
     free(thread_arg);
 
     char buff[MAX_BUFFER_SIZE], res_buff[MAX_BUFFER_SIZE];
@@ -25,7 +25,7 @@ void * serve_client(void * p_data){
             break;
         }
 
-        command_handler(commandId, res_buff);
+        command_handler(commandId, buff + 3, res_buff);
 
         // print buffer which contains the client contents
         printf("From client: %s\nTo client : \"%s\"\n", buff, res_buff);
@@ -38,12 +38,12 @@ void * serve_client(void * p_data){
     return NULL;
 }
 
-void accept_tcp_connections_non_blocking(void (* func) (int, char *), pthread_t * accept_thread) {
+void accept_tcp_connections_non_blocking(void (* func) (int, char *, char *), pthread_t * accept_thread) {
     if(pthread_create(accept_thread, NULL, accept_tcp_connections, func) != 0)
         printf("Failed to create server accept thread\n");
 }
 
-void * accept_tcp_connections(void (* func) (int, char *)) {
+void * accept_tcp_connections(void (* func) (int, char *, char *)) {
     pthread_t client_t[MAX_CLIENTS];
 
     int sockfd, client_i = 0;

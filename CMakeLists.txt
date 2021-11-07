@@ -5,11 +5,14 @@ find_package (Threads)
 
 set(CMAKE_C_STANDARD 99)
 
-add_executable(factory factory.c network/tcp_client.c network/tcp_server.c network/tcp.h)
+add_executable(factory factory.c network/tcp_client.c network/tcp_server.c)
 target_link_libraries (factory ${CMAKE_THREAD_LIBS_INIT})
 
-add_executable(dashboard dashboard.c network/tcp_client.c network/tcp_server.c network/tcp.h)
+add_executable(dashboard dashboard.c network/tcp_client.c network/tcp_server.c)
 target_link_libraries (dashboard ${CMAKE_THREAD_LIBS_INIT})
 
-add_executable(tcp_tester network/tcp_tester.c network/tcp.h network/tcp_client.c network/tcp_server.c)
+add_executable(tcp_tester network/tcp_tester.c network/tcp_client.c network/tcp_server.c)
 target_link_libraries (tcp_tester ${CMAKE_THREAD_LIBS_INIT})
+
+add_executable(skynet network/tcp_client.c network/tcp_server.c)
+target_link_libraries (skynet ${CMAKE_THREAD_LIBS_INIT})

@@ -1,16 +1,16 @@
 #include "tcp.h"
 
-void send_command_to_server(int commandId, char * response, ClientThreadData * data) {
+void send_command_to_server(int commandId, char * arguments, char * response, ClientThreadData * data) {
     // lock mutex
     pthread_mutex_lock(&(data->command_mutex));
 
     // set commandId
-    data->commandId = commandId;
+    sprintf(data->command, "%03d %s", commandId, arguments);
 
     // signal that there is a new command to handle
     pthread_cond_signal(&(data->command_condition));
 
-    if (data->commandId == -1) {
+    if (commandId == -1) {
         pthread_mutex_unlock(&(data->command_mutex));
         return;
     }
@@ -29,7 +29,7 @@ void send_command_to_server(int commandId, char * response, ClientThreadData * d
 void * interact_with_server (void * p_data) {
     ClientThreadData * data = (ClientThreadData *) p_data;
 
-    char buff[MAX_BUFFER_SIZE];
+    int commandId;
 
     while (1) {
         // lock the mutex
@@ -38,13 +38,12 @@ void * interact_with_server (void * p_data) {
         // wait for a command
         pthread_cond_wait(&(data->command_condition), &(data->command_mutex));
 
-        bzero(buff, MAX_BUFFER_SIZE);
-        sprintf(buff, "%d", data->commandId);
+        sscanf(data->command, "%d", &commandId);
 
-        write(data->sockfd, buff, sizeof(buff));
+        write(data->sockfd, data->command, sizeof(data->command));
 
         // if msg contains "Exit" then server exit and chat ended.
-        if (data->commandId == -1) {
+        if (commandId == -1) {
             printf("Client Exit...\n");
             pthread_mutex_unlock(&(data->command_mutex));
             break;

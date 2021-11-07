@@ -1,7 +1,10 @@
 #include "tcp.h"
 
-void handle_command(int commandId, char * response) {
+void handle_command(int commandId, char * args, char * response) {
     if (commandId == 0) {
+        int a, b;
+        sscanf(args, "%d %d", &a, &b);
+        printf("arguments: a=%d b=%d\n", a, b);
         strcpy(response, "Command 0, sensor data");
     }
     else if (commandId == 1) {
@@ -32,9 +35,13 @@ int main(void) {
         ClientThreadData data;
         connect_to_tcp_server("127.0.0.1", &data);
         while (1) {
+            char arguments[MAX_ARGS_BUFFER_SIZE];
+
             printf("Command to send:");
             scanf("%d", &cmd);
-            send_command_to_server(cmd, buffer, &data);
+            printf("arguments: ");
+            sprintf(arguments, "1 2");
+            send_command_to_server(cmd, arguments, buffer, &data);
 
             // exit
             if(cmd == -1)
