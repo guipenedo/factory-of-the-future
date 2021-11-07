@@ -1,10 +1,12 @@
-#include "tcp.h"
+#include "tcp_ip.h"
 
 void send_command_to_server(int commandId, char * arguments, char * response, ClientThreadData * data) {
     // lock mutex
     pthread_mutex_lock(&(data->command_mutex));
 
     // set commandId
+    if (arguments == NULL)
+        arguments = "";
     sprintf(data->command, "%03d %s", commandId, arguments);
 
     // signal that there is a new command to handle
@@ -19,7 +21,8 @@ void send_command_to_server(int commandId, char * arguments, char * response, Cl
     pthread_cond_wait(&(data->command_condition), &(data->command_mutex));
 
     // save response data
-    strcpy(response, data->response);
+    if (response != NULL)
+        strcpy(response, data->response);
 
     // unlock mutex
     pthread_mutex_unlock(&(data->command_mutex));
@@ -61,7 +64,8 @@ void * interact_with_server (void * p_data) {
 }
 
 
-void connect_to_tcp_server(const char * server_addr, ClientThreadData * data) {
+void connect_to_tcp_server(const char * server_addr, ClientThreadData ** pointer_data) {
+    ClientThreadData * data = (ClientThreadData *) malloc(sizeof(ClientThreadData));
     struct sockaddr_in servaddr;
     pthread_cond_init(&(data->command_condition), NULL);
     pthread_mutex_init(&(data->command_mutex), NULL);
@@ -70,6 +74,7 @@ void connect_to_tcp_server(const char * server_addr, ClientThreadData * data) {
     data->sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if (data->sockfd == -1) {
         printf("socket creation failed...\n");
+        free(data);
         exit(0);
     }
     else
@@ -84,11 +89,13 @@ void connect_to_tcp_server(const char * server_addr, ClientThreadData * data) {
     // connect the client socket to server socket
     if (connect(data->sockfd, (SA*) &servaddr, sizeof(servaddr)) != 0) {
         printf("connection with the server failed...\n");
+        free(data);
         exit(0);
     }
     else
         printf("connected to the server..\n");
 
     pthread_create(&(data->interact_server_thread), NULL, interact_with_server, data);
+    *pointer_data = data;
 }
 

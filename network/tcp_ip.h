@@ -1,5 +1,5 @@
-#ifndef FACTORY_OF_THE_FUTURE_TCP_H
-#define FACTORY_OF_THE_FUTURE_TCP_H
+#ifndef FACTORY_OF_THE_FUTURE_TCP_IP_H
+#define FACTORY_OF_THE_FUTURE_TCP_IP_H
 
 #include <stdio.h>
 #include <unistd.h>
@@ -37,6 +37,8 @@ void * accept_tcp_connections(void (*) (int, char *, char *));
 void accept_tcp_connections_non_blocking(void (*) (int, char *, char *), pthread_t *);
 void send_command_to_server(int, char *, char *, ClientThreadData *);
 void * interact_with_server (void *);
-void connect_to_tcp_server(const char *, ClientThreadData *);
+void connect_to_tcp_server(const char *, ClientThreadData **);
 
-#endif //FACTORY_OF_THE_FUTURE_TCP_H
+void get_ip_address(char *);
+
+#endif //FACTORY_OF_THE_FUTURE_TCP_IP_H
