@@ -24,6 +24,8 @@ void send_command_to_server(int commandId, char * arguments, char * response, Cl
     if (response != NULL)
         strcpy(response, data->response);
 
+    printf("<- To Server: %s | From Server : \"%s\"\n", data->command, data->response);
+
     // unlock mutex
     pthread_mutex_unlock(&(data->command_mutex));
 }

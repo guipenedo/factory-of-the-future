@@ -24,10 +24,12 @@ void handle_command(int commandId, char * args, char * response) {
         ClientThreadData * newFactoryClient = connect_new_factory(args);
 
         // tell new factory to also connect to our server
+        char send_args[MAX_BUFFER_SIZE];
         char ip_address[20];
         get_ip_address(ip_address);
+        sprintf(send_args, "%s %d", ip_address, fact_ID);
         // send CMD_CONNECT_BACK_FACTORY
-        send_command_to_server(CMD_CONNECT_BACK_FACTORY, ip_address, NULL, newFactoryClient);
+        send_command_to_server(CMD_CONNECT_BACK_FACTORY, send_args, NULL, newFactoryClient);
     } else if (commandId == CMD_CONNECT_BACK_FACTORY) {
         connect_new_factory(args);
     }

@@ -28,7 +28,7 @@ void * serve_client(void * p_data){
         command_handler(commandId, buff + 3, res_buff);
 
         // print buffer which contains the client contents
-        printf("From client: %s\nTo client : \"%s\"\n", buff, res_buff);
+        printf("-> From client: %s | To client : \"%s\"\n", buff, res_buff);
 
         // and send that buffer to client
         write(connfd, res_buff, sizeof(res_buff));
