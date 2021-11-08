@@ -28,11 +28,13 @@ void handle_command(int commandId, char * args, char * response) {
         ClientThreadData * newFactoryClient;
         connect_to_tcp_server(ip_address, &newFactoryClient);
         push_host(factory_list, factory_id, newFactoryClient);
+        sprintf(response, "%d", factory_id);
     } else if (commandId == CMD_SEND_SENSOR_DATA) {
         int factId;
         double temperature, humidity, pressure;
         sscanf(args, "%d %lf %lf %lf", &factId, &temperature, &humidity, &pressure);
 
+        int alarm = 0;
         if (alarm) { // TODO
             char args[MAX_ARGS_BUFFER_SIZE];
             sprintf(args, "%d", factId);
