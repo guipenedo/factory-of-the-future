@@ -11,9 +11,11 @@
 #include <pthread.h>
 #include <errno.h>
 
+#define DEBUG_NETWORK_COMMS 1
+
 #define MAX_CLIENTS 8
 #define MAX_BUFFER_SIZE 80
-#define MAX_ARGS_BUFFER_SIZE MAX_BUFFER_SIZE-4
+#define MAX_ARGS_BUFFER_SIZE MAX_BUFFER_SIZE - 4
 
 #define PORT 8080
 #define SA struct sockaddr
