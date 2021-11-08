@@ -5,6 +5,8 @@
 host_node * host_list;
 pthread_t server_thread;
 
+int fact_ID = -1;
+
 ClientThreadData * connect_new_factory(char * args) {
     char ip_address[20];
     int host_id;
@@ -55,7 +57,6 @@ int main(int argc, char **argv) {
     send_command_to_server(CMD_INIT_NEW_FACTORY, ip_address, response, dashboardClient);
 
     // get our new factory ID
-    int fact_ID;
     sscanf(response, "%d", &fact_ID);
     printf("Successfully connected to the dashboard. This factory now has ID=%d\n", fact_ID);
 
