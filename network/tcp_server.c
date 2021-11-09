@@ -13,7 +13,7 @@ void * serve_client(void * p_data){
         bzero(buff, MAX_BUFFER_SIZE);
         bzero(res_buff, MAX_BUFFER_SIZE);
 
-        // read the message from client and copy it in buffer
+        // read the message from client and copy it to the buffer
         read(connfd, buff, sizeof(buff));
 
         // actually handle whatever we have to do
@@ -52,6 +52,7 @@ void * accept_tcp_connections(void (* func) (int, char *, char *, char *)) {
     int sockfd, client_i = 0;
     socklen_t len;
     struct sockaddr_in servaddr, client;
+    len = sizeof(struct sockaddr_in);
 
     // socket create and verification
     sockfd = socket(AF_INET, SOCK_STREAM, 0);
@@ -66,7 +67,7 @@ void * accept_tcp_connections(void (* func) (int, char *, char *, char *)) {
     // assign IP, PORT
     servaddr.sin_family = AF_INET; // TCP
     servaddr.sin_addr.s_addr = htonl(INADDR_ANY);
-    servaddr.sin_addr.s_addr = inet_addr("0.0.0.0");
+    servaddr.sin_addr.s_addr = INADDR_ANY;
     servaddr.sin_port = htons(PORT);
 
     // Binding newly created socket to given IP and verification
@@ -87,7 +88,6 @@ void * accept_tcp_connections(void (* func) (int, char *, char *, char *)) {
         ServerThreadData * args = malloc (sizeof (ServerThreadData));
         args->command_handler = func;
         //Accept call creates a new socket for the incoming connection
-        len = sizeof client_i;
         args->connfd = accept(sockfd, (SA *) &client, &len);
         if (args->connfd < 0) {
             printf("server acccept failed...\n");
@@ -98,6 +98,7 @@ void * accept_tcp_connections(void (* func) (int, char *, char *, char *)) {
         // get the new client's IP address
         char * ip = inet_ntoa(client.sin_addr);
         strcpy(args->client_ip, ip);
+        printf("Client IP address: %s\n", ip);
 
         //for each client request creates a thread and assign the client request to it to process
         //so the main thread can entertain next request

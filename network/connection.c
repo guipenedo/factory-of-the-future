@@ -8,10 +8,17 @@ void connect_to_dashboard(const char * dashboardAddr, host_node ** host_list, in
     initialize_host_list(host_list);
     push_host(*host_list, 0, dashboardClient);
 
+    printf("saved dashboard client\n");
+    fflush(stdout);
+
     char response[20];
+    printf("sending command to init\n");
+    fflush(stdout);
     // send init_new_factory command
     send_command_to_server(factory ? CMD_INIT_NEW_FACTORY : CMD_INIT_ML, NULL, response, dashboardClient);
 
+    printf("command sent!!! command to init\n");
+    fflush(stdout);
     // get our new host ID
     sscanf(response, "%d", host_id);
     printf("Successfully connected to the dashboard. We now have host ID=%d\n", *host_id);
