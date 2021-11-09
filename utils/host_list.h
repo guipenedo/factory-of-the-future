@@ -1,7 +1,7 @@
 #ifndef FACTORY_OF_THE_FUTURE_HOST_LIST_H
 #define FACTORY_OF_THE_FUTURE_HOST_LIST_H
 
-#include "../network/tcp_ip.h"
+#include "../network/tcp.h"
 
 typedef struct host_n {
     ClientThreadData * host;

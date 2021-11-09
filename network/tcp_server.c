@@ -1,4 +1,4 @@
-#include "tcp_ip.h"
+#include "tcp.h"
 
 void * serve_client(void * p_data){
     ServerThreadData * thread_arg = (ServerThreadData *) p_data;

@@ -30,6 +30,7 @@ typedef struct ClientThreadData {
     pthread_cond_t command_condition;
     pthread_mutex_t command_mutex;
     int sockfd;
+    char ip_address[MAX_BUFFER_SIZE];
     char command[MAX_BUFFER_SIZE];
     char response[MAX_BUFFER_SIZE];
     pthread_t interact_server_thread;

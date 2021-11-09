@@ -1,4 +1,5 @@
-#include "network/tcp_ip.h"
+#include "network/tcp.h"
+#include "network/connection.h"
 #include "interfaces/network_commands.h"
 #include "utils/host_list.h"
 
@@ -28,33 +29,10 @@ void receive_sensor_data(int factId, double temperature, double humidity, double
     }
 }
 
-void handle_command(int commandId, char * args, char * response) {
+void handle_command(int commandId, char * args, char * response, char * client_ip) {
     if (commandId == CMD_INIT_NEW_FACTORY || commandId == CMD_INIT_ML) {
         int factory_id = ++number_of_factories;
-        char ip_address[20];
-        sscanf(args, "%s", ip_address);
-        if (commandId == CMD_INIT_NEW_FACTORY)
-            printf("New factory connected with ID=%d from %s\n.", factory_id, ip_address);
-        else
-            printf("ML module connected with ID=%d from %s\n.", factory_id, ip_address);
-
-        sprintf(cmd_args, "%s %d", ip_address, factory_id);
-
-        // broadcast this new host to every other host
-        host_node *factory = factory_list;
-        while (factory->next != NULL) {
-            factory = factory->next;
-            send_command_to_server(CMD_ANNOUNCE_NEW_HOST, cmd_args, NULL, factory->host);
-        }
-
-        // save this new factory to our list of factories
-        // or save this as ml module
-        ClientThreadData *newFactoryClient;
-        connect_to_tcp_server(ip_address, &newFactoryClient);
-        if (commandId == CMD_INIT_NEW_FACTORY)
-            push_host(factory_list, factory_id, newFactoryClient);
-        else
-            ml_client = newFactoryClient;
+        dashboard_init_new_host(factory_id, client_ip, factory_list, &ml_client, commandId == CMD_INIT_NEW_FACTORY);
         sprintf(response, "%d", factory_id);
     } else if (commandId == CMD_SEND_SENSOR_DATA) {
         int factId;

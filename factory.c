@@ -1,4 +1,4 @@
-#include "network/tcp_ip.h"
+#include "network/tcp.h"
 #include "interfaces/network_commands.h"
 #include "interfaces/peripherals_network.h"
 #include "utils/host_list.h"
@@ -14,14 +14,9 @@ void trigger_alarm(int fact_id_alarm) {
     // TODO
 }
 
-void handle_command(int commandId, char * args, char * response) {
+void handle_command(int commandId, char * args, char * response, char * client_ip) {
     if (commandId == CMD_ANNOUNCE_NEW_HOST) {
-        ClientThreadData * newFactoryClient = connect_new_factory(args);
-
-        // tell new factory to also connect to our server
-        send_connect_back(fact_ID, newFactoryClient);
-    } else if (commandId == CMD_CONNECT_BACK_HOST) {
-        connect_new_factory(args);
+        connect_new_factory(args, host_list);
     } else if (commandId == CMD_SEND_SENSOR_DATA) {
         int factId;
         double temperature, humidity, pressure;

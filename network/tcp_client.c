@@ -1,4 +1,4 @@
-#include "tcp_ip.h"
+#include "tcp.h"
 
 void send_command_to_server(int commandId, char * arguments, char * response, ClientThreadData * data) {
     // lock mutex
