@@ -73,6 +73,7 @@ void connect_to_tcp_server(const char * server_addr, ClientThreadData ** pointer
     struct sockaddr_in servaddr;
     pthread_cond_init(&(data->command_condition), NULL);
     pthread_mutex_init(&(data->command_mutex), NULL);
+    strcpy(data->ip_address, server_addr);
 
     // socket create and varification
     data->sockfd = socket(AF_INET, SOCK_STREAM, 0);
