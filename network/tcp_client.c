@@ -8,7 +8,6 @@ void send_command_to_server(int commandId, char * arguments, char * response, Cl
     if (arguments == NULL)
         arguments = "";
     sprintf(data->command, "%03d %s", commandId, arguments);
-    printf("command being sent: %s\n", data->command);
 
     // signal that there is a new command to handle
     pthread_cond_signal(&(data->command_condition));

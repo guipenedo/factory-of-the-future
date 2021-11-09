@@ -98,7 +98,8 @@ void * accept_tcp_connections(void (* func) (int, char *, char *, char *)) {
         // get the new client's IP address
         char * ip = inet_ntoa(client.sin_addr);
         strcpy(args->client_ip, ip);
-        printf("Client IP address: %s\n", ip);
+        if (DEBUG_NETWORK_COMMS)
+            printf("Client IP address: %s\n", ip);
 
         //for each client request creates a thread and assign the client request to it to process
         //so the main thread can entertain next request

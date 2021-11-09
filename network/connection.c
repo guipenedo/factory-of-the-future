@@ -8,17 +8,10 @@ void connect_to_dashboard(const char * dashboardAddr, host_node ** host_list, in
     initialize_host_list(host_list);
     push_host(*host_list, 0, dashboardClient);
 
-    printf("saved dashboard client\n");
-    fflush(stdout);
-
     char response[20];
-    printf("sending command to init\n");
-    fflush(stdout);
     // send init_new_factory command
     send_command_to_server(factory ? CMD_INIT_NEW_FACTORY : CMD_INIT_ML, NULL, response, dashboardClient);
 
-    printf("command sent!!! command to init\n");
-    fflush(stdout);
     // get our new host ID
     sscanf(response, "%d", host_id);
     printf("Successfully connected to the dashboard. We now have host ID=%d\n", *host_id);
@@ -44,7 +37,6 @@ void dashboard_init_new_host(int factory_id, const char * client_ip, host_node *
 
     char cmd_args[MAX_ARGS_BUFFER_SIZE];
     sprintf(cmd_args, "%s %d", client_ip, factory_id);
-    printf("cmd_args_to_send=%s\n", cmd_args);
 
     // save this new factory to our list of factories
     // or save this as ml module
@@ -55,18 +47,12 @@ void dashboard_init_new_host(int factory_id, const char * client_ip, host_node *
     host_node *factory_node = factory_list;
     char cmd_args_2[MAX_ARGS_BUFFER_SIZE];
     while (factory_node->next != NULL) {
-        printf("loop!\n");
-        fflush(stdout);
         factory_node = factory_node->next;
-        printf("sending to %s: %s\n", factory_node->host->ip_address, cmd_args);
         send_command_to_server(CMD_ANNOUNCE_NEW_HOST, cmd_args, NULL, factory_node->host);
         // send to new host as well
         sprintf(cmd_args_2, "%s %d", factory_node->host->ip_address, factory_node->host_id);
-        printf("sending to %s: %s\n", newFactoryClient->ip_address, cmd_args_2);
         send_command_to_server(CMD_ANNOUNCE_NEW_HOST, cmd_args_2, NULL, newFactoryClient);
     }
-    printf("endloop!\n");
-    fflush(stdout);
 
     if (factory)
         push_host(factory_list, factory_id, newFactoryClient);
