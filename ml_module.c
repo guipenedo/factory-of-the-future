@@ -12,7 +12,7 @@ char cmd_args[MAX_ARGS_BUFFER_SIZE];
 
 void handle_command(int commandId, char * args, char * response) {
     if (commandId == CMD_ANNOUNCE_NEW_HOST) {
-        ClientThreadData * newFactoryClient = connect_new_factory(args);
+        ClientThreadData *newFactoryClient = connect_new_factory(args);
 
         // tell new factory to also connect to our server
         send_connect_back(fact_ID, newFactoryClient);
@@ -24,6 +24,7 @@ void handle_command(int commandId, char * args, char * response) {
         sscanf(args, "%d %lf %lf %lf", &factId, &temperature, &humidity, &pressure);
         // TODO
     }
+}
 
 int main(int argc, char **argv) {
     if (argc != 2) {

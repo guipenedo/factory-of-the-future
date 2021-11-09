@@ -3,7 +3,9 @@
 void * serve_client(void * p_data){
     ServerThreadData * thread_arg = (ServerThreadData *) p_data;
     int connfd = thread_arg->connfd;
-    void (* command_handler) (int,  char *, char *) = thread_arg->command_handler;
+    void (* command_handler) (int,  char *, char *, char *) = thread_arg->command_handler;
+    char client_ip[MAX_BUFFER_SIZE];
+    strcpy(client_ip, thread_arg->client_ip);
     free(thread_arg);
 
     char buff[MAX_BUFFER_SIZE], res_buff[MAX_BUFFER_SIZE];
@@ -25,7 +27,7 @@ void * serve_client(void * p_data){
             break;
         }
 
-        command_handler(commandId, buff + 3, res_buff);
+        command_handler(commandId, buff + 3, res_buff, client_ip);
 
         // print buffer which contains the client contents
         if (DEBUG_NETWORK_COMMS)
@@ -39,18 +41,17 @@ void * serve_client(void * p_data){
     return NULL;
 }
 
-void accept_tcp_connections_non_blocking(void (* func) (int, char *, char *), pthread_t * accept_thread) {
+void accept_tcp_connections_non_blocking(void (* func) (int, char *, char *, char *), pthread_t * accept_thread) {
     if(pthread_create(accept_thread, NULL, accept_tcp_connections, func) != 0)
         printf("Failed to create server accept thread\n");
 }
 
-void * accept_tcp_connections(void (* func) (int, char *, char *)) {
+void * accept_tcp_connections(void (* func) (int, char *, char *, char *)) {
     pthread_t client_t[MAX_CLIENTS];
 
     int sockfd, client_i = 0;
     socklen_t len;
-    struct sockaddr_in servaddr;
-    struct sockaddr_storage serverStorage;
+    struct sockaddr_in servaddr, client;
 
     // socket create and verification
     sockfd = socket(AF_INET, SOCK_STREAM, 0);
@@ -58,7 +59,7 @@ void * accept_tcp_connections(void (* func) (int, char *, char *)) {
     if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &(int){1}, sizeof(int)) < 0) {
         printf("socket creation failed...\n");
         exit(0);
-    } else
+    } else if(DEBUG_NETWORK_COMMS)
         printf("Socket successfully created..\n");
     bzero(&servaddr, sizeof(servaddr));
 
@@ -72,27 +73,31 @@ void * accept_tcp_connections(void (* func) (int, char *, char *)) {
     if ((bind(sockfd, (SA *) &servaddr, sizeof(servaddr))) != 0) {
         printf("socket bind failed... error code: %d\n", errno);
         exit(0);
-    } else
+    } else if (DEBUG_NETWORK_COMMS)
         printf("Socket successfully binded..\n");
 
     // Now server is ready to listen and verification
     if ((listen(sockfd, 5)) != 0) {
         printf("Listen failed...\n");
         exit(0);
-    } else
+    } else if (DEBUG_NETWORK_COMMS)
         printf("Server listening..\n");
 
     while (1) {
         ServerThreadData * args = malloc (sizeof (ServerThreadData));
         args->command_handler = func;
         //Accept call creates a new socket for the incoming connection
-        len = sizeof serverStorage;
-        args->connfd = accept(sockfd, (SA *) &serverStorage, &len);
+        len = sizeof client_i;
+        args->connfd = accept(sockfd, (SA *) &client, &len);
         if (args->connfd < 0) {
             printf("server acccept failed...\n");
             exit(0);
-        } else
+        } else if (DEBUG_NETWORK_COMMS)
             printf("server acccept the client...\n");
+
+        // get the new client's IP address
+        char * ip = inet_ntoa(client.sin_addr);
+        strcpy(args->client_ip, ip);
 
         //for each client request creates a thread and assign the client request to it to process
         //so the main thread can entertain next request

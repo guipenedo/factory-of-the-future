@@ -21,8 +21,9 @@
 #define SA struct sockaddr
 
 typedef struct ServerThreadData {
-    void (* command_handler) (int, char *, char *);
+    void (* command_handler) (int, char *, char *, char *);
     int connfd;
+    char client_ip[MAX_BUFFER_SIZE];
 } ServerThreadData;
 
 typedef struct ClientThreadData {
@@ -35,8 +36,8 @@ typedef struct ClientThreadData {
 } ClientThreadData;
 
 void * serve_client(void *);
-void * accept_tcp_connections(void (*) (int, char *, char *));
-void accept_tcp_connections_non_blocking(void (*) (int, char *, char *), pthread_t *);
+void * accept_tcp_connections(void (*) (int, char *, char *, char *));
+void accept_tcp_connections_non_blocking(void (*) (int, char *, char *, char *), pthread_t *);
 void send_command_to_server(int, char *, char *, ClientThreadData *);
 void * interact_with_server (void *);
 void connect_to_tcp_server(const char *, ClientThreadData **);
