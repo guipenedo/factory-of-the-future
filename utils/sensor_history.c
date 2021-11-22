@@ -68,3 +68,14 @@ void free_sensor_data_buffer(sensor_history_buffer ** data_buffer) {
     free(*data_buffer);
     *data_buffer = NULL;
 }
+
+
+void send_sensor_history_file(sensor_history_buffer * data_buffer, ) {
+    pthread_mutex_lock(&(data_buffer->data_mutex));
+    //flush cached data
+    write_sensor_data_to_file(data_buffer, 0);
+
+
+
+    pthread_mutex_unlock(&(data_buffer->data_mutex));
+}

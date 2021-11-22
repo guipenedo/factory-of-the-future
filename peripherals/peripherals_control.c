@@ -31,6 +31,18 @@
 //////////////////////////////////////////////
 #define LED  1
 
+short has_sensors() {
+    return 1;
+}
+
+short has_led() {
+    return 1;
+}
+
+short has_relay() {
+    return 1;
+}
+
 void set_led_state(short state)
 {
 	wiringPiSetup () ;
