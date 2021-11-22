@@ -33,6 +33,7 @@ typedef struct ClientThreadData {
     char ip_address[MAX_BUFFER_SIZE];
     char command[MAX_BUFFER_SIZE];
     char response[MAX_BUFFER_SIZE];
+    short command_to_handle, response_to_handle;
     pthread_t interact_server_thread;
 } ClientThreadData;
 

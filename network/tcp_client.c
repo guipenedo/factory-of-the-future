@@ -10,6 +10,7 @@ void send_command_to_server(int commandId, char * arguments, char * response, Cl
     sprintf(data->command, "%03d %s", commandId, arguments);
 
     // signal that there is a new command to handle
+    data->command_to_handle = 1;
     pthread_cond_signal(&(data->command_condition));
 
     if (commandId == -1) {
@@ -18,7 +19,9 @@ void send_command_to_server(int commandId, char * arguments, char * response, Cl
     }
 
     // wait for response data write signal
-    pthread_cond_wait(&(data->command_condition), &(data->command_mutex));
+    if(!data->response_to_handle)
+        pthread_cond_wait(&(data->command_condition), &(data->command_mutex));
+    data->response_to_handle = 0;
 
     // save response data
     if (response != NULL)
@@ -42,7 +45,9 @@ void * interact_with_server (void * p_data) {
         pthread_mutex_lock(&(data->command_mutex));
 
         // wait for a command
-        pthread_cond_wait(&(data->command_condition), &(data->command_mutex));
+        if (!data->command_to_handle)
+            pthread_cond_wait(&(data->command_condition), &(data->command_mutex));
+        data->command_to_handle = 0;
 
         sscanf(data->command, "%d", &commandId);
 
@@ -58,6 +63,7 @@ void * interact_with_server (void * p_data) {
         read(data->sockfd, data->response, sizeof(data->response));
 
         // signal that the response data is written
+        data->response_to_handle = 1;
         pthread_cond_signal(&(data->command_condition));
 
         pthread_mutex_unlock(&(data->command_mutex));
@@ -72,6 +78,8 @@ void connect_to_tcp_server(const char * server_addr, ClientThreadData ** pointer
     struct sockaddr_in servaddr;
     pthread_cond_init(&(data->command_condition), NULL);
     pthread_mutex_init(&(data->command_mutex), NULL);
+    data->command_to_handle = 0;
+    data->response_to_handle = 0;
     strcpy(data->ip_address, server_addr);
 
     // socket create and varification

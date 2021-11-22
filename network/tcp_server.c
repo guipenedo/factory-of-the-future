@@ -2,6 +2,7 @@
 #include "../interfaces/network_commands.h"
 
 void * serve_client(void * p_data){
+    printf("Serving client");
     ServerThreadData * thread_arg = (ServerThreadData *) p_data;
     int connfd = thread_arg->connfd;
     void (* command_handler) (int,  char *, char *, char *) = thread_arg->command_handler;
@@ -10,16 +11,22 @@ void * serve_client(void * p_data){
     free(thread_arg);
 
     char buff[MAX_BUFFER_SIZE], res_buff[MAX_BUFFER_SIZE];
+    printf("starting loop client");
+    fflush(stdout);
     while (1) {
         bzero(buff, MAX_BUFFER_SIZE);
         bzero(res_buff, MAX_BUFFER_SIZE);
 
+        printf("reading");
+        fflush(stdout);
         // read the message from client and copy it to the buffer
         read(connfd, buff, sizeof(buff));
 
         // actually handle whatever we have to do
         int commandId;
         int conv = sscanf(buff, "%d", &commandId);
+        printf("reading commandId client");
+        fflush(stdout);
         if (conv <= 0)
             continue;
 
@@ -34,6 +41,8 @@ void * serve_client(void * p_data){
             continue;
         }
 
+        printf("calling command handler client");
+        fflush(stdout);
         command_handler(commandId, buff + 3, res_buff, client_ip);
 
         // print buffer which contains the client contents
