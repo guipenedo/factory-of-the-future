@@ -15,7 +15,9 @@ short has_led();
 short has_relay();
 
 // this function should edit the SensorData's argument values to those read by the sensor
-void read_sensor_data(SensorData * data);
+void init_sensor();
+void read_sensor_data(SensorData *);
+void read_sensor();
 
 // this function takes as argument the desired led state
 void set_led_state(short state);
