@@ -31,6 +31,20 @@
 //////////////////////////////////////////////
 #define LED  1
 
+short sensor_connected = 0;
+
+short has_sensors(){
+	return sensor_connected;
+}
+
+short has_led(){
+	return 1;
+}
+
+short has_relay(){
+	return 1;
+}
+
 void set_led_state(short state)
 {
 	wiringPiSetup () ;
@@ -110,6 +124,10 @@ void init_sensor(){
 
   rslt = bme280_init(&dev);
   printf("\r\n BME280 Init Result is:%d \r\n",rslt);
+  if (rslt == 0)
+  	sensor_connected = 1;
+  else
+  	return;
   //////stream_sensor_data_normal_mode(&dev);
   
   uint8_t settings_sel;
