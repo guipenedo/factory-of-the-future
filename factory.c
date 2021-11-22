@@ -31,6 +31,14 @@ void handle_command(int commandId, char * args, char * response, char * client_i
         trigger_alarm(fact_id_alarm);
     } else if (commandId == CMD_GET_PERIPHERALS) {
         sprintf(response, "%d %d %d", has_sensors(), has_led(), has_relay());
+    } else if (commandId == CMD_SET_LED_STATE) {
+        short state;
+        sscanf(args, "%hd", &state);
+        set_led_state(state);
+    } else if (commandId == CMD_SET_RELAY_STATE) {
+        short state;
+        sscanf(args, "%hd", &state);
+        set_relay_state(state);
     }
 }
 
@@ -41,13 +49,6 @@ void broadcast_sensor_data(SensorData sensorData) {
         host = host->next;
         send_command_to_server(CMD_SEND_SENSOR_DATA, cmd_args, NULL, host->host);
     }
-}
-
-// TODO: replace with production version
-void read_sensor_data(SensorData * data) {
-    data->pressure = 1.34;
-    data->temperature = 20.4;
-    data->humidity = 99;
 }
 
 int main(int argc, char **argv) {
@@ -65,6 +66,7 @@ int main(int argc, char **argv) {
 
     connect_to_dashboard(dashboardAddr, &host_list, &fact_ID, 1);
     init_sensor_data_buffer(&sensor_history);
+    init_sensor();
 
     while(1) {
         SensorData sensorData;

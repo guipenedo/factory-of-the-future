@@ -9,5 +9,7 @@
 #define CMD_TRIGGER_ALARM               4  // (ID) -> OK
 #define CMD_INIT_ML                     5 // (IP) -> (ID)
 #define CMD_SEND_SENSOR_HISTORY_FILE    6 // (no parameters) -> file stream
+#define CMD_SET_LED_STATE               7 // state -> OK
+#define CMD_SET_RELAY_STATE             8 // state -> OK
 
 #endif //FACTORY_OF_THE_FUTURE_NETWORK_COMMANDS_H
