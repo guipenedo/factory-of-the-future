@@ -31,6 +31,8 @@ int push_host(host_node * head, int host_id, ClientThreadData * host) {
 void pop_host(host_node * prev) {
     host_node * host_to_pop = prev->next;
     prev->next = host_to_pop->next;
+    pthread_cond_destroy(&(host_to_pop->host->command_condition));
+    pthread_mutex_destroy(&(host_to_pop->host->command_mutex));
     free(host_to_pop->host);
     free(host_to_pop);
 }

@@ -1,4 +1,5 @@
 #include "tcp.h"
+#include "../interfaces/network_commands.h"
 
 void * serve_client(void * p_data){
     ServerThreadData * thread_arg = (ServerThreadData *) p_data;
@@ -22,9 +23,15 @@ void * serve_client(void * p_data){
         if (conv <= 0)
             continue;
 
-        if (commandId == -1){
+        if (commandId == CMD_CLOSE_CONNECTION){
             printf("Client sent exit. Closing this client's thread...\n");
             break;
+        }
+
+        if (commandId == CMD_SEND_SENSOR_HISTORY_FILE) {
+            printf("Client requested sensor history file. Sending...");
+            //TODO
+            continue;
         }
 
         command_handler(commandId, buff + 3, res_buff, client_ip);

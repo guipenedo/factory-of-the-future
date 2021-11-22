@@ -3,9 +3,11 @@
 #include "interfaces/peripherals_network.h"
 #include "utils/host_list.h"
 #include "network/connection.h"
+#include "utils/sensor_history.h"
 
 host_node * host_list;
 pthread_t server_thread;
+sensor_history_buffer * sensor_history;
 
 int fact_ID = -1;
 char cmd_args[MAX_ARGS_BUFFER_SIZE];
@@ -27,6 +29,8 @@ void handle_command(int commandId, char * args, char * response, char * client_i
         sscanf(args, "%d", &fact_id_alarm);
         printf("[!] Alarm triggered because of factory ID %d\n.", fact_id_alarm);
         trigger_alarm(fact_id_alarm);
+    } else if (commandId == CMD_GET_PERIPHERALS) {
+        sprintf(response, "%d %d %d", has_sensors(), has_led(), has_relay());
     }
 }
 
@@ -60,16 +64,20 @@ int main(int argc, char **argv) {
     printf("Starting factory! Dashboard IP address: %s\n", dashboardAddr);
 
     connect_to_dashboard(dashboardAddr, &host_list, &fact_ID, 1);
+    init_sensor_data_buffer(&sensor_history);
 
     while(1) {
         SensorData sensorData;
         read_sensor_data(&sensorData);
+        store_sensor_data(sensor_history, sensorData);
         broadcast_sensor_data(sensorData);
-        sleep(5);
+        sleep(MEASUREMENT_PERIOD);
     }
 
+    write_sensor_data_to_file(sensor_history, 1);
     close_all_connections(host_list);
     free_host_list(host_list);
+    free_sensor_data_buffer(&sensor_history);
 
     return 0;
 }
