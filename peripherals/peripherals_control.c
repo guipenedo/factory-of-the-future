@@ -28,44 +28,69 @@
 //Raspberry 3B+ platform's default I2C device file
 #define IIC_Dev  "/dev/i2c-1"
 
-//////////////////////////////////////////////
+#define RELAY 0
 #define LED  1
+#define buzzer  21
+#define led  22
 
+//////////////////////////////////////////////
 short sensor_connected = 0;
 
 short has_sensors(){
+	init_sensor(); //re initialize to check if sensor is conected
 	return sensor_connected;
 }
 
 short has_led(){
-	return 1;
+  short s;
+  short flag = 1; //assume its conected
+  pinMode (LED, INPUT);
+  pullUpDnControl(LED,PUD_OFF);
+  for (int i = 0; i < 10; i++){
+    delay(1);
+    s = digitalRead(LED); // when its 0, its connected
+    if (s != 0){ //an unconected will be changing between 1 & 0
+      flag = 0;
+      break;
+    }
+  }
+  return flag;
 }
 
 short has_relay(){
-	return 1;
-}
-
+  short s;
+  short flag = 1; //assume its conected
+  pinMode (RELAY, INPUT);
+  pullUpDnControl(RELAY,PUD_OFF);
+  for (int i = 0; i < 10; i++){
+    delay(1);
+    s = digitalRead(RELAY); // when its 1, its connected
+    if (s != 1){ //an unconected will be changing between 1 & 0
+      flag = 0; 
+      break;
+    }
+  }
+  return flag;
+}		
+//////////////////////////////////////////////
 void set_led_state(short state)
 {
-	wiringPiSetup () ;
 	pinMode (LED, OUTPUT);
 	if(state==0)
 		digitalWrite (LED, LOW);
 	else
 		digitalWrite(LED,HIGH);
 }
-//////////////////////////////////////////////
-#define RELAY 0
 
 void set_relay_state(short state)
 {
-	wiringPiSetup () ;
+	
 	pinMode (RELAY, OUTPUT);
 	if(state==0)
 		digitalWrite (RELAY, LOW);
 	else
 		digitalWrite(RELAY, HIGH);
-}		
+}	
 //////////////////////////////////////////////
 	
 int fd;
@@ -103,10 +128,13 @@ void print_sensor_data(struct bme280_data *comp_data)
 }
 
 struct bme280_dev dev;
+short sensor_connected;
 
 void init_sensor(){
+  // init actuators
+  wiringPiSetup () ;
   int8_t rslt = BME280_OK;
-
+  // init sensors
   if ((fd = open(IIC_Dev, O_RDWR)) < 0) {
     printf("Failed to open the i2c bus. \n");
     exit(1);
@@ -124,10 +152,10 @@ void init_sensor(){
 
   rslt = bme280_init(&dev);
   printf("\r\n BME280 Init Result is:%d \r\n",rslt);
-  if (rslt == 0)
-  	sensor_connected = 1;
-  else
-  	return;
+  
+  if (rslt==0) sensor_connected=1;
+  else return;
+  
   //////stream_sensor_data_normal_mode(&dev);
   
   uint8_t settings_sel;
@@ -156,6 +184,22 @@ void read_sensor_data(SensorData *data)
   data->temperature = comp_data.temperature;
   data->humidity = comp_data.humidity;
   data->pressure = comp_data.pressure;
+}
+
+void trigger_factory_alarm(int factID)
+{
+  pinMode (buzzer,OUTPUT) ;
+  pinMode (led,OUTPUT) ;
+  int i=0;
+  for (;i<6;i++)
+  {
+    digitalWrite (buzzer, HIGH) ;  // On
+    digitalWrite (led, HIGH) ;
+    delay (200) ;               // mS
+    digitalWrite (buzzer, LOW) ;   // Off
+    digitalWrite (led, LOW);
+    delay (500) ;
+  }
 }
 
 
