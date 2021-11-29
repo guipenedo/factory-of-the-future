@@ -243,7 +243,28 @@ int main(int argc, char **argv) {
                 }
 
                 /* Do something here */
+                host_node * factory = get_host_by_id(factory_list, flags[0]);
+                if (factory == NULL) {
+                    printf("\n[ERROR] Invalid factory ID.\n");
+                    continue;
+                }
+                ClientThreadData * client = factory->host;
 
+                if (flags[2] != 0 && flags[2] != 1) {
+                    printf("\n[ERROR] Actuator state must be 0 or 1.\n");
+                    continue;
+                }
+
+                sprintf(cmd_args, "%d", flags[2]);
+
+                if (flags[1] == 0) {// LED
+                    send_command_to_server(CMD_SET_LED_STATE, cmd_args, NULL, client);
+                } else if(flags[1] == 1) {// RELAY
+                    send_command_to_server(CMD_SET_RELAY_STATE, cmd_args, NULL, client);
+                } else {
+                    printf("\n[ERROR] 0 -> LED | 1 -> RELAY\n");
+                    continue;
+                }
 
 
                 /* Do something here */

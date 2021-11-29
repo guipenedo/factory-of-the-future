@@ -61,3 +61,10 @@ void close_all_connections(host_node * head){
         close_connection(head);
     }
 }
+
+host_node * get_host_by_id(host_node * head, int host_id) {
+    host_node * prev = head;
+    while (prev->next != NULL && prev->next->host->host_id != host_id)
+        prev = prev->next;
+    return prev->next;
+}
