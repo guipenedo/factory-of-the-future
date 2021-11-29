@@ -14,7 +14,7 @@ ELSE()
     target_link_libraries (factory ${CMAKE_THREAD_LIBS_INIT})
 ENDIF()
 
-add_executable(dashboard dashboard.c network/tcp_client.c network/tcp_server.c utils/host_list.c network/connection.c utils/sensor_data_utils.c dashlib/plot.c)
+add_executable(dashboard dashboard.c network/tcp_client.c network/tcp_server.c utils/host_list.c network/connection.c utils/sensor_data_utils.c dashlib/plot.c utils/sensor_history.c)
 target_link_libraries (dashboard ${CMAKE_THREAD_LIBS_INIT})
 
 add_executable(ml ml_module.c network/tcp_client.c network/tcp_server.c utils/host_list.c network/connection.c utils/sensor_data_utils.c utils/sensor_history.c)
