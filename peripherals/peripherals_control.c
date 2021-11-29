@@ -77,7 +77,6 @@ void set_led_state(short state)
 
 void set_relay_state(short state)
 {
-
     pinMode (RELAY, OUTPUT);
     if(state==0)
         digitalWrite (RELAY, LOW);

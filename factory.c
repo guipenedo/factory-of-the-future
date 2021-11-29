@@ -73,11 +73,15 @@ int main(int argc, char **argv) {
     connect_to_dashboard(dashboardAddr, &host_list, &fact_ID, 1);
     init_sensor();
 
+    short sensors_enabled = has_sensors();
+
     while(1) {
-        SensorData sensorData;
-        read_sensor_data(&sensorData);
-        store_sensor_data(sensor_history, sensorData);
-        broadcast_sensor_data(sensorData);
+        if (sensors_enabled) {
+            SensorData sensorData;
+            read_sensor_data(&sensorData);
+            store_sensor_data(sensor_history, sensorData);
+            broadcast_sensor_data(sensorData);
+        }
         sleep(MEASUREMENT_PERIOD);
     }
 
