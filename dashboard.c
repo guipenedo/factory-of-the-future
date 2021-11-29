@@ -221,7 +221,7 @@ int main(int argc, char **argv) {
 
             }
 
-            else if (strcmp (command, "list") == 0) {
+            else if (strcmp (command, "list\n") == 0) {
                 /* Capture 0 flags */
                 printf("\nThe user has selected the LIST command:\n");
                 printf("Factory IDs: ");
