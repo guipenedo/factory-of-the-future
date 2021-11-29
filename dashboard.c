@@ -369,7 +369,7 @@ int main(int argc, char **argv) {
                 send_command_to_server(CMD_SEND_SENSOR_HISTORY_FILE, NULL, NULL, client);
                 receive_sensor_history_file(client);
 
-                printf("File downloaded successfully!");
+                printf("File downloaded successfully!\n");
 
                 continue;
 
