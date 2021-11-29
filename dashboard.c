@@ -18,10 +18,10 @@
 #define MAX_FACTORIES MAX_CLIENTS - 2
 #define MAX_MEASURES_STORED 20
 
-#define SHOW_FLAGS 1                    /* ID */
+#define SHOW_FLAGS 1                    /* ID */                        /* OK */
 #define PLOT_FLAGS 2                    /* ID SENSOR */
 #define SENDCOM_FLAGS 3                 /* ID ACTUATOR VALUE */
-#define SETTHRESHOLD_FLAGS 3            /* ID SENSOR VALUE */
+#define SETTHRESHOLD_FLAGS 2            /* SENSOR VALUE */              /* OK */
 #define RECORD_FLAGS 1                  /* ID */
 #define DISPSENSOR_FLAGS 1              /* ID */
 #define DISPACTUATOR_FLAGS 1            /* ID */
@@ -31,6 +31,9 @@
 
 double database[MAX_FACTORIES][MAX_MEASURES_STORED][4];    /* |time|temperature|humidity|pressure| */
 int current[MAX_FACTORIES];
+double temperatureThreshold = 30.0;
+double pressureThreshold = 150000.0;
+double humidityThreshold = 75.0;
 
 host_node * factory_list;
 ClientThreadData * ml_client = NULL;
@@ -83,11 +86,32 @@ void handle_command(int commandId, char * args, char * response, int connfd, cha
 
 void showCurrent(int factoryId) {
 
-    /* Displays for the factory ID given the measures done by the sensor at a time */
-    int latest = (current[factoryId] - 1) % MAX_MEASURES_STORED;
-    printf("Factory %d has measured at time %lf temperature: %lf humidity: %lf pressure: %lf \n",
-           factoryId, database[factoryId][latest][0],database[factoryId][latest][1],
-           database[factoryId][latest][2],database[factoryId][latest][3]);
+  /* Displays for the factory ID given the measures done by the sensor at a time */
+
+  int latest = (current[factoryId] - 1) % MAX_MEASURES_STORED;
+  printf("Factory %d has measured at time %lf temperature: %lf humidity: %lf pressure: %lf \n",
+  factoryId, database[factoryId][latest][0], database[factoryId][latest][1],
+  database[factoryId][latest][2], database[factoryId][latest][3]);
+
+}
+
+void setTreshold(int sensor, double value) {
+
+  switch (sensor) {
+
+    case 1:
+      temperatureThreshold = value;
+
+    case 2:
+      humidityThreshold = value;
+
+    case 3:
+      pressureThreshold = value;
+
+    default:
+      printf("[EEROR] You have not set up a new threshold");
+
+  }
 
 }
 
@@ -117,6 +141,8 @@ int plotParameter(int* param, int* time, int counter, char* title, char* nameFil
 
 }
 
+/* Main function */
+
 int main(int argc, char **argv) {
 
     if (argc != 1) {
@@ -128,7 +154,7 @@ int main(int argc, char **argv) {
 
     int bytes_read, index = 0;
     int nbcommands = 0;
-    int flags [3] = {0, 0, 0};
+    double flags [3] = {0.0, 0.0, 0.0};
     size_t size = MAX_SIZE * sizeof (char);
     char *string = malloc (size);
     char *command;
@@ -195,7 +221,7 @@ int main(int argc, char **argv) {
 
                     /* Transform from string to int */
 
-                    flags[index] = (int) strtol(command, NULL, 10);
+                    flags[index] = (double) strtol(command, NULL, 10);
 
                 }
 
@@ -207,7 +233,7 @@ int main(int argc, char **argv) {
 
                 /* Do something here */
 
-                showCurrent(flags[0]);
+                showCurrent(((int) flags[0]));
 
                 /* Do something here */
 
@@ -226,7 +252,7 @@ int main(int argc, char **argv) {
 
                     /* Transform from string to int */
 
-                    flags[index] = (int) strtol(command, NULL, 10);
+                    flags[index] = (double) strtol(command, NULL, 10);
 
                 }
 
@@ -283,7 +309,7 @@ int main(int argc, char **argv) {
 
                     /* Transform from string to int */
 
-                    flags[index] = (int) strtol(command, NULL, 10);
+                    flags[index] = (double) strtol(command, NULL, 10);
 
                 }
 
@@ -312,9 +338,11 @@ int main(int argc, char **argv) {
 
             }
 
+            /* 4. SETTHRESHOLD command */
+
             else if (strcmp (command, "setthreshold") == 0) {
 
-                /* Capture 3 flags (id, sensor, value) */
+                /* Capture 2 flags (sensor, value) */
 
                 for (index = 0; index < SETTHRESHOLD_FLAGS; index++) {
 
@@ -322,7 +350,7 @@ int main(int argc, char **argv) {
 
                     /* Transform from string to int */
 
-                    flags[index] = (int) strtol(command, NULL, 10);
+                    flags[index] = (double) strtol(command, NULL, 10);
 
                 }
 
@@ -335,17 +363,9 @@ int main(int argc, char **argv) {
 
                 /* Do something here */
 
-
+                setTreshold (((int) flags[0]), flags[1]);
 
                 /* Do something here */
-
-                /* Test */
-
-                printf("\nThe user have selected the SETTHRESHOLD command:\n");
-                printf("Factory ID >> %d\n",flags[0]);
-                printf("Sensor ID >> %d\n",flags[1]);
-                printf("Value >> %d\n",flags[2]);
-
 
                 continue;
 
@@ -361,7 +381,7 @@ int main(int argc, char **argv) {
 
                     /* Transform from string to int */
 
-                    flags[index] = (int) strtol(command, NULL, 10);
+                    flags[index] = (double) strtol(command, NULL, 10);
 
                 }
 
@@ -398,7 +418,7 @@ int main(int argc, char **argv) {
 
                     /* Transform from string to int */
 
-                    flags[index] = (int) strtol(command, NULL, 10);
+                    flags[index] = (double) strtol(command, NULL, 10);
 
                 }
 
@@ -435,7 +455,7 @@ int main(int argc, char **argv) {
 
                     /* Transform from string to int */
 
-                    flags[index] = (int) strtol(command, NULL, 10);
+                    flags[index] = (double) strtol(command, NULL, 10);
 
                 }
 
@@ -472,7 +492,7 @@ int main(int argc, char **argv) {
 
                     /* Transform from string to int */
 
-                    flags[index] = (int) strtol(command, NULL, 10);
+                    flags[index] = (double) strtol(command, NULL, 10);
 
                 }
 
@@ -501,29 +521,42 @@ int main(int argc, char **argv) {
 
             }
 
+            /* 10. HELP Command */
+
             else if (strcmp (command, "help\n") == 0) {
 
-                /* Help - information about the tool */
+              printf("\n");
+              printf("Introduce a valid command and the required parameters:\n");
+              printf("  - show id >> show data captured by the sensors of one factory via its ID.\n");
+              printf("  - plot id sensor >> plot data captured by a sensor of one factory.\n");
+              printf("  - sendcom id actuator value >> send a command to one actuator of one factory.\n");
+              printf("    - LED >> value = 0\n");
+              printf("    - Relay >> value = 1\n");
+              printf("  - settreshold sensor value >> set a threshold for a specific kind of sensor:\n");
+              printf("    - temperature >> sensor = 1\n");
+              printf("    - pressure >> sensor = 2\n");
+              printf("    - humidity >> sensor = 3\n");
+              printf("  - downloadhistory id >> download data of one factory.\n");
+              printf("  - dispsensor id >> display the list of sensors of one factory.\n");
+              printf("  - dispactuator id >> display the list of actuators of one factory.\n");
+              printf("  - predict sensor time >> predict a future value of a sensor using ML.\n");
 
-                printf("\nThe user have selected the HELP command\n");
-
-
-                continue;
+              continue;
 
             }
 
+            /* 11. Exit command */
+
             else if (strcmp (command, "exit\n") == 0) {
 
-                /* Exit main function */
-
-                printf("\e[1;1H\e[2J");
-                exit(0);
+              printf("\e[1;1H\e[2J");
+              exit(0);
 
             }
 
             else {
                 printf("\n[ERROR] The command is not valid. Try again\n");
-                
+
                 continue;
             }
 
