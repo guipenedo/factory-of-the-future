@@ -27,4 +27,6 @@ void set_led_state(short state);
 // this function takes as argument the desired relay state
 void set_relay_state(short state);
 
+void trigger_factory_alarm(int);
+
 #endif //FACTORY_OF_THE_FUTURE_PERIPHERALS_H

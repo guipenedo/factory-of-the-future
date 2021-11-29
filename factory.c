@@ -16,10 +16,6 @@ SensorHistoryWriteBuffer * sensor_history;
 int fact_ID = -1;
 char cmd_args[MAX_ARGS_BUFFER_SIZE];
 
-void trigger_alarm(int fact_id_alarm) {
-    // TODO
-}
-
 void handle_command(int commandId, char * args, char * response, int connfd, char * client_ip) {
     if (commandId == CMD_ANNOUNCE_NEW_HOST) {
         connect_new_factory(args, host_list);
@@ -32,7 +28,7 @@ void handle_command(int commandId, char * args, char * response, int connfd, cha
         int fact_id_alarm;
         sscanf(args, "%d", &fact_id_alarm);
         printf("[!] Alarm triggered because of factory ID %d\n.", fact_id_alarm);
-        trigger_alarm(fact_id_alarm);
+        trigger_factory_alarm(fact_id_alarm);
     } else if (commandId == CMD_GET_PERIPHERALS) {
         sprintf(response, "%d %d %d", has_sensors(), has_led(), has_relay());
     } else if (commandId == CMD_SET_LED_STATE) {
