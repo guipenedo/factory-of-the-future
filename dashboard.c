@@ -84,10 +84,10 @@ void handle_command(int commandId, char * args, char * response, int connfd, cha
 void showCurrent(int factoryId) {
 
     /* Displays for the factory ID given the measures done by the sensor at a time */
-
+    int latest = (current[factoryId] - 1) % MAX_MEASURES_STORED;
     printf("Factory %d has measured at time %lf temperature: %lf humidity: %lf pressure: %lf \n",
-           factoryId, database[factoryId][current[factoryId]][0],database[factoryId][current[factoryId]][1],
-           database[factoryId][current[factoryId]][2],database[factoryId][current[factoryId]][3]);
+           factoryId, database[factoryId][latest][0],database[factoryId][latest][1],
+           database[factoryId][latest][2],database[factoryId][latest][3]);
 
 }
 
