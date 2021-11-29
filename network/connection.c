@@ -71,7 +71,7 @@ void dashboard_init_new_host(int factory_id, const char * client_ip, host_node *
     if (*ml_client != NULL)
         announce_to_host(*ml_client, cmd_args, newFactoryClient);
 
-    if (!factory)
+    if (factory)
         push_host(factory_list, newFactoryClient);
     else
         *ml_client = newFactoryClient;

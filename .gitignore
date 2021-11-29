@@ -2,6 +2,9 @@ data.temp
 data.press
 data.hum
 sensor_history*.dat
+dashboard
+factory
+ml
 
 ### C++ template
 # Compiled Object files
