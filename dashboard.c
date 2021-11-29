@@ -228,7 +228,7 @@ int main(int argc, char **argv) {
                 host_node * prev = factory_list;
                 while (prev->next != NULL){
                     printf("%d ", prev->next->host->host_id);
-                    prev->next = prev->next;
+                    prev = prev->next;
                 }
                 printf("\n");
                 continue;
