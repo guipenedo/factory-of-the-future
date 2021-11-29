@@ -160,14 +160,6 @@ int main(int argc, char **argv) {
 
         if (nbcommands > 0) {
 
-            /* Clear previous commands */
-
-            printf("\e[1;1H\e[2J");
-
-            /* User interface */
-
-            printf("\n%61s\n\n", "<< THE FACTORY OF THE FUTURE - DASHBOARD >>");
-
             /* Introduce command */
 
             printf("Introduce a command >> ");
