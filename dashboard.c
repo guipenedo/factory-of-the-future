@@ -9,17 +9,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
+#include "dashboard/plot.h"
+#include "dashboard/database.h"
 
 /* Constants declaration */
 
-#define MAX_SIZE 25
-#define NUM_COMMANDS 2
-#define MAX_FACTORIES MAX_CLIENTS - 2
-#define MAX_MEASURES_STORED 20
-
-#define SHOW_FLAGS 1                    /* ID */                        /* OK */
-#define PLOT_FLAGS 2                    /* ID SENSOR */
+#define SHOW_FLAGS 1                    /* ID */
+#define PLOT_FLAGS 1                    /* ID */
 #define SENDCOM_FLAGS 3                 /* ID ACTUATOR VALUE */
 #define SETTHRESHOLD_FLAGS 2            /* SENSOR VALUE */              /* OK */
 #define RECORD_FLAGS 1                  /* ID */
@@ -29,8 +25,8 @@
 
 /* Global variables */
 
-double database[MAX_FACTORIES][MAX_MEASURES_STORED][4];    /* |time|temperature|humidity|pressure| */
-int current[MAX_FACTORIES];
+database_type database;    /* |time|temperature|humidity|pressure| */
+current_type current;
 double temperatureThreshold = 30.0;
 double pressureThreshold = 150000.0;
 double humidityThreshold = 75.0;
@@ -152,7 +148,7 @@ int main(int argc, char **argv) {
 
     /* Definition & Initialization of variables */
 
-    int bytes_read, index = 0;
+    int bytes_read, index;
     int nbcommands = 0;
     double flags [3] = {0.0, 0.0, 0.0};
     size_t size = MAX_SIZE * sizeof (char);
@@ -243,8 +239,7 @@ int main(int argc, char **argv) {
             }
 
             else if (strcmp (command, "plot") == 0) {
-
-                /* Capture 2 flags (id, sensor) */
+                /* Capture 1 flags (id) */
 
                 for (index = 0; index < PLOT_FLAGS; index++) {
 
@@ -262,38 +257,10 @@ int main(int argc, char **argv) {
                     continue;
                 }
 
-                /* Do something here */
-
-                /* Temperature*/
-                int temp_data[] = {1,3,5,6,6,5,2,4,5};
-                int time_data[] = {1,2,3,4,5,6,7,8,9};
-                int *temper = temp_data;
-                int *time = time_data;
-                plotParameter(temper, time, sizeof(temp_data)/sizeof(temp_data[0]), "set title \"Temperature\"", "data.temp", "plot 'data.temp' with lines");
-
-                /* Pressure*/
-                int press_data[] = {13,34,25,16,26,15,12,14,15};
-                int* press = press_data;
-                plotParameter(press, time, sizeof(press_data)/sizeof(press_data[0]), "set title \"Pressure\"", "data.press", "plot 'data.press' with lines");
-
-
-                /* Humidity*/
-                int humidity_data[] = {32,14,5,12,26,35,12,24,5};
-                int* hum = humidity_data;
-                plotParameter(hum, time, sizeof(humidity_data)/sizeof(humidity_data[0]), "set title \"Humidity\"", "data.hum", "plot 'data.hum' with lines");
-
-
-
-
-
-
-                /* Do something here */
-
-                /* Test */
+                plot_sensors(flags[0], database, current);
 
                 printf("\nThe user have selected the PLOT command:\n");
                 printf("Factory ID >> %d\n",flags[0]);
-                printf("Sensor ID >> %d\n",flags[1]);
 
                 continue;
 
@@ -550,7 +517,7 @@ int main(int argc, char **argv) {
             else if (strcmp (command, "exit\n") == 0) {
 
               printf("\e[1;1H\e[2J");
-              exit(0);
+              break;
 
             }
 
