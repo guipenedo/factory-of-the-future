@@ -6,7 +6,7 @@
 #define MAX_SIZE 25
 #define NUM_COMMANDS 2
 #define MAX_FACTORIES MAX_CLIENTS - 2
-#define MAX_MEASURES_STORED 20
+#define MAX_MEASURES_STORED 2000
 
 typedef double database_type [MAX_FACTORIES][MAX_MEASURES_STORED][4];
 typedef int current_type[MAX_FACTORIES];

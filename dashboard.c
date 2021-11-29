@@ -12,6 +12,7 @@
 #include <unistd.h>
 #include "dashlib/plot.h"
 #include "dashlib/database.h"
+#include "utils/sensor_history.h"
 
 /* Constants declaration */
 
@@ -20,6 +21,8 @@
 #define SENDCOM_FLAGS 3                 /* ID ACTUATOR VALUE */
 #define SETTHRESHOLD_FLAGS 3            /* ID SENSOR VALUE */
 #define RECORD_FLAGS 1                  /* ID */
+#define DOWNLOAD_HISTORY_FLAGS 1        /* ID */
+#define SHOW_HISTORY_FLAGS 2            /* ID LINES */
 #define DISPSENSOR_FLAGS 1              /* ID */
 #define DISPACTUATOR_FLAGS 1            /* ID */
 #define PREDICT_FLAGS 3                 /* ID SENSOR TIME */
@@ -334,11 +337,11 @@ int main(int argc, char **argv) {
 
             }
 
-            else if (strcmp (command, "record") == 0) {
+            else if (strcmp (command, "downloadhistory") == 0) {
 
                 /* Capture 1 flag (id) */
 
-                for (index = 0; index < RECORD_FLAGS; index++) {
+                for (index = 0; index < DOWNLOAD_HISTORY_FLAGS; index++) {
 
                     command = strtok (NULL, delimiter);
 
@@ -355,20 +358,68 @@ int main(int argc, char **argv) {
                     continue;
                 }
 
-                /* Do something here */
-
-
-
-                /* Do something here */
-
-                /* Test */
-
-                printf("\nThe user have selected the RECORD command:\n");
+                host_node * factory = get_host_by_id(factory_list, flags[0]);
+                if (factory == NULL) {
+                    printf("\n[ERROR] Invalid factory ID.\n");
+                    continue;
+                }
+                ClientThreadData * client = factory->host;
+                printf("\nThe user have selected the DOWNLOAD HISTORY command:\n");
                 printf("Factory ID >> %d\n",flags[0]);
-                sleep(10);
+                send_command_to_server(CMD_SEND_SENSOR_HISTORY_FILE, NULL, NULL, client);
+                receive_sensor_history_file(client);
+
+                printf("File downloaded successfully!");
 
                 continue;
 
+            }
+
+            else if (strcmp (command, "showhistory") == 0) {
+
+                /* Capture 2 flags (id, lines) */
+
+                for (index = 0; index < SHOW_HISTORY_FLAGS; index++) {
+
+                    command = strtok (NULL, delimiter);
+
+                    /* Transform from string to int */
+
+                    flags[index] = (int) strtol(command, NULL, 10);
+
+                }
+
+                command = strtok (NULL, delimiter);
+                if (command != NULL) {
+                    printf("\n[ERROR] The command is not valid. Try again.\n");
+                    sleep(5);
+                    continue;
+                }
+
+                host_node * factory = get_host_by_id(factory_list, flags[0]);
+                if (factory == NULL) {
+                    printf("\n[ERROR] Invalid factory ID.\n");
+                    continue;
+                }
+
+                if (flags[1] <= 0 || flags[1] > 200) {
+                    printf("\n[ERROR] Lines must be between 1 and 200.\n");
+                    continue;
+                }
+
+                ClientThreadData * client = factory->host;
+                printf("\nThe user have selected the SHOW HISTORY command:\n");
+                printf("Factory ID >> %d\n", flags[0]);
+                printf("Lines >> %d\n", flags[1]);
+
+
+                SensorData * data = malloc(flags[1] * sizeof(SensorData));
+                int lines = read_sensor_data_from_file(data, flags[1], flags[0]);
+                printf("Read %d data lines\n", lines);
+                for (int i = 0; i < lines; ++i) {
+                    printf("Ts=%ld T=%lf H=%lf P=%lf\n", data[i].time, data[i].temperature, data[i].humidity, data[i].pressure);
+                }
+                free(data);
             }
 
             else if (strcmp (command, "dispsensor") == 0) {
