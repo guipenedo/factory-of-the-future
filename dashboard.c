@@ -10,16 +10,13 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include "dashboard/plot.h"
+#include "dashboard/database.h"
 
 /* Constants declaration */
 
-#define MAX_SIZE 25
-#define NUM_COMMANDS 2
-#define MAX_FACTORIES MAX_CLIENTS - 2
-#define MAX_MEASURES_STORED 20
-
 #define SHOW_FLAGS 1                    /* ID */
-#define PLOT_FLAGS 2                    /* ID SENSOR */
+#define PLOT_FLAGS 1                    /* ID */
 #define SENDCOM_FLAGS 3                 /* ID ACTUATOR VALUE */
 #define SETTHRESHOLD_FLAGS 3            /* ID SENSOR VALUE */
 #define RECORD_FLAGS 1                  /* ID */
@@ -29,8 +26,8 @@
 
 /* Global variables */
 
-double database[MAX_FACTORIES][MAX_MEASURES_STORED][4];    /* |time|temperature|humidity|pressure| */
-int current[MAX_FACTORIES];
+database_type database;    /* |time|temperature|humidity|pressure| */
+current_type current;
 
 host_node * factory_list;
 ClientThreadData * ml_client = NULL;
@@ -91,31 +88,6 @@ void showCurrent(int factoryId) {
 
 }
 
-int plotParameter(int* param, int* time, int counter, char* title, char* nameFile, char* setting){
-
-    char * commandsForGnuplot[] = {title, setting};
-    FILE * file = fopen(nameFile, "w");
-    /*Opens an interface that one can use to send commands as if they were typing into the
-     *     gnuplot command line.  "The -persistent" keeps the plot open even after your
-     *     C program terminates.
-     */
-    FILE * gnuplotPipe = popen ("gnuplot -persistent", "w");
-    int i;
-    for (i=0; i < counter; i++)
-    {
-        fprintf(file, "%d %d \n", *(time+i), *(param+i)); //Write the data to a temporary file
-        fflush(file);
-    }
-
-    for (i=0; i < NUM_COMMANDS; i++)
-    {
-
-        fprintf(gnuplotPipe, "%s \n", commandsForGnuplot[i]);//Send commands to gnuplot one by one.
-        fflush(gnuplotPipe);
-    }
-    return 0;
-
-}
 
 int main(int argc, char **argv) {
 
@@ -220,8 +192,7 @@ int main(int argc, char **argv) {
             }
 
             else if (strcmp (command, "plot") == 0) {
-
-                /* Capture 2 flags (id, sensor) */
+                /* Capture 1 flags (id) */
 
                 for (index = 0; index < PLOT_FLAGS; index++) {
 
@@ -240,38 +211,10 @@ int main(int argc, char **argv) {
                     continue;
                 }
 
-                /* Do something here */
-
-                /* Temperature*/
-                int temp_data[] = {1,3,5,6,6,5,2,4,5};
-                int time_data[] = {1,2,3,4,5,6,7,8,9};
-                int *temper = temp_data;
-                int *time = time_data;
-                plotParameter(temper, time, sizeof(temp_data)/sizeof(temp_data[0]), "set title \"Temperature\"", "data.temp", "plot 'data.temp' with lines");
-
-                /* Pressure*/
-                int press_data[] = {13,34,25,16,26,15,12,14,15};
-                int* press = press_data;
-                plotParameter(press, time, sizeof(press_data)/sizeof(press_data[0]), "set title \"Pressure\"", "data.press", "plot 'data.press' with lines");
-
-
-                /* Humidity*/
-                int humidity_data[] = {32,14,5,12,26,35,12,24,5};
-                int* hum = humidity_data;
-                plotParameter(hum, time, sizeof(humidity_data)/sizeof(humidity_data[0]), "set title \"Humidity\"", "data.hum", "plot 'data.hum' with lines");
-
-
-
-
-
-
-                /* Do something here */
-
-                /* Test */
+                plot_sensors(flags[0], database, current);
 
                 printf("\nThe user have selected the PLOT command:\n");
                 printf("Factory ID >> %d\n",flags[0]);
-                printf("Sensor ID >> %d\n",flags[1]);
                 sleep(10);
 
                 continue;

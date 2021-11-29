@@ -1,3 +1,8 @@
+data.temp
+data.press
+data.hum
+sensor_history*.dat
+
 ### C++ template
 # Compiled Object files
 *.slo
