@@ -221,6 +221,20 @@ int main(int argc, char **argv) {
 
             }
 
+            else if (strcmp (command, "list") == 0) {
+                /* Capture 0 flags */
+                printf("\nThe user has selected the LIST command:\n");
+                printf("Factory IDs: ");
+                host_node * prev = factory_list;
+                while (prev->next != NULL){
+                    printf("%d ", prev->next->host->host_id);
+                    prev->next = prev->next;
+                }
+                printf("\n");
+                continue;
+
+            }
+
             else if (strcmp (command, "sendcom") == 0) {
 
                 /* Capture 3 flags (id, actuator, value) */
