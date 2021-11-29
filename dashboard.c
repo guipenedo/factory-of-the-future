@@ -172,7 +172,6 @@ int main(int argc, char **argv) {
 
         if (bytes_read == -1) {
             printf("\n[ERROR] The command is not valid. Try again.\n");
-            sleep(5);
             continue;
         }
 
@@ -203,7 +202,6 @@ int main(int argc, char **argv) {
                 command = strtok (NULL, delimiter);
                 if (command != NULL) {
                     printf("\n[ERROR] The command is not valid. Try again.\n");
-                    sleep(5);
                     continue;
                 }
 
@@ -213,7 +211,6 @@ int main(int argc, char **argv) {
 
                 /* Do something here */
 
-                sleep(10);
 
                 continue;
 
@@ -236,7 +233,6 @@ int main(int argc, char **argv) {
                 command = strtok (NULL, delimiter);
                 if (command != NULL) {
                     printf("\n[ERROR] The command is not valid. Try again.\n");
-                    sleep(5);
                     continue;
                 }
 
@@ -272,7 +268,6 @@ int main(int argc, char **argv) {
                 printf("\nThe user have selected the PLOT command:\n");
                 printf("Factory ID >> %d\n",flags[0]);
                 printf("Sensor ID >> %d\n",flags[1]);
-                sleep(10);
 
                 continue;
 
@@ -295,7 +290,7 @@ int main(int argc, char **argv) {
                 command = strtok (NULL, delimiter);
                 if (command != NULL) {
                     printf("\n[ERROR] The command is not valid. Try again.\n");
-                    sleep(5);
+
                     continue;
                 }
 
@@ -311,7 +306,7 @@ int main(int argc, char **argv) {
                 printf("Factory ID >> %d\n",flags[0]);
                 printf("Actuator ID >> %d\n",flags[1]);
                 printf("Value >> %d\n",flags[2]);
-                sleep(10);
+
 
                 continue;
 
@@ -334,7 +329,7 @@ int main(int argc, char **argv) {
                 command = strtok (NULL, delimiter);
                 if (command != NULL) {
                     printf("\n[ERROR] The command is not valid. Try again.\n");
-                    sleep(5);
+
                     continue;
                 }
 
@@ -350,7 +345,7 @@ int main(int argc, char **argv) {
                 printf("Factory ID >> %d\n",flags[0]);
                 printf("Sensor ID >> %d\n",flags[1]);
                 printf("Value >> %d\n",flags[2]);
-                sleep(10);
+
 
                 continue;
 
@@ -373,7 +368,7 @@ int main(int argc, char **argv) {
                 command = strtok (NULL, delimiter);
                 if (command != NULL) {
                     printf("\n[ERROR] The command is not valid. Try again.\n");
-                    sleep(5);
+
                     continue;
                 }
 
@@ -387,7 +382,7 @@ int main(int argc, char **argv) {
 
                 printf("\nThe user have selected the RECORD command:\n");
                 printf("Factory ID >> %d\n",flags[0]);
-                sleep(10);
+
 
                 continue;
 
@@ -410,7 +405,7 @@ int main(int argc, char **argv) {
                 command = strtok (NULL, delimiter);
                 if (command != NULL) {
                     printf("\n[ERROR] The command is not valid. Try again.\n");
-                    sleep(5);
+
                     continue;
                 }
 
@@ -424,7 +419,7 @@ int main(int argc, char **argv) {
 
                 printf("\nThe user have selected the DISPSENSOR command:\n");
                 printf("Factory ID >> %d\n",flags[0]);
-                sleep(10);
+
 
                 continue;
 
@@ -447,7 +442,7 @@ int main(int argc, char **argv) {
                 command = strtok (NULL, delimiter);
                 if (command != NULL) {
                     printf("\n[ERROR] The command is not valid. Try again.\n");
-                    sleep(5);
+
                     continue;
                 }
 
@@ -461,7 +456,7 @@ int main(int argc, char **argv) {
 
                 printf("\nThe user have selected the DISPACTUATOR command:\n");
                 printf("Factory ID >> %d\n",flags[0]);
-                sleep(10);
+
 
                 continue;
 
@@ -484,7 +479,7 @@ int main(int argc, char **argv) {
                 command = strtok (NULL, delimiter);
                 if (command != NULL) {
                     printf("\n[ERROR] The command is not valid. Try again.\n");
-                    sleep(5);
+
                     continue;
                 }
 
@@ -500,7 +495,7 @@ int main(int argc, char **argv) {
                 printf("Factory ID >> %d\n",flags[0]);
                 printf("Sensor ID >> %d\n",flags[1]);
                 printf("Time >> %d\n",flags[2]);
-                sleep(10);
+
 
                 continue;
 
@@ -511,7 +506,7 @@ int main(int argc, char **argv) {
                 /* Help - information about the tool */
 
                 printf("\nThe user have selected the HELP command\n");
-                sleep(10);
+
 
                 continue;
 
@@ -528,7 +523,7 @@ int main(int argc, char **argv) {
 
             else {
                 printf("\n[ERROR] The command is not valid. Try again\n");
-                sleep(5);
+                
                 continue;
             }
 
