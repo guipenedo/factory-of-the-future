@@ -46,3 +46,8 @@ void read_sensor_data(SensorData *data)
     data->pressure = 1.423 + i * 0.01;
     i++;
 }
+
+void trigger_factory_alarm(int factID)
+{
+    printf("Alarm triggered");
+}
