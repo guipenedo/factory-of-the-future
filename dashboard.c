@@ -10,8 +10,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include "dashboard/plot.h"
-#include "dashboard/database.h"
+#include "dashlib/plot.h"
+#include "dashlib/database.h"
 
 /* Constants declaration */
 
