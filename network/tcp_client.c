@@ -1,4 +1,11 @@
 #include "tcp.h"
+#include <stdio.h>
+#include <unistd.h>
+#include <netinet/in.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/socket.h>
+#include <arpa/inet.h>
 
 void send_command_to_server(int commandId, char * arguments, char * response, ClientThreadData * data) {
     // lock mutex
@@ -89,7 +96,7 @@ void connect_to_tcp_server(const char * server_addr, ClientThreadData ** pointer
         free(data);
         exit(0);
     }
-    else
+    else if (DEBUG_NETWORK_COMMS)
         printf("Socket successfully created..\n");
     bzero(&servaddr, sizeof(servaddr));
 
@@ -100,11 +107,11 @@ void connect_to_tcp_server(const char * server_addr, ClientThreadData ** pointer
 
     // connect the client socket to server socket
     if (connect(data->sockfd, (SA*) &servaddr, sizeof(servaddr)) != 0) {
-        printf("connection with the server failed...\n");
+        printf("connection with the server failed with error %m...\n");
         free(data);
         exit(0);
     }
-    else
+    else if (DEBUG_NETWORK_COMMS)
         printf("connected to the server..\n");
 
     pthread_create(&(data->interact_server_thread), NULL, interact_with_server, data);

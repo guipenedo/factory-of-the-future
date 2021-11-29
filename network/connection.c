@@ -1,12 +1,16 @@
 #include "../utils/host_list.h"
 #include "../interfaces/network_commands.h"
+#include <stdio.h>
 
 void connect_to_dashboard(const char * dashboardAddr, host_node ** host_list, int * host_id, int factory) {
     // connect to the dashboard
     ClientThreadData * dashboardClient;
     connect_to_tcp_server(dashboardAddr, &dashboardClient);
     initialize_host_list(host_list);
-    push_host(*host_list, 0, dashboardClient);
+
+    dashboardClient->host_id = 0;
+
+    push_host(*host_list, dashboardClient);
 
     char response[20];
     // send init_new_factory command
@@ -25,8 +29,19 @@ ClientThreadData * connect_new_factory(char * args, host_node * host_list) {
 
     ClientThreadData * newFactoryClient;
     connect_to_tcp_server(ip_address, &newFactoryClient);
-    push_host(host_list, host_id, newFactoryClient);
+
+    newFactoryClient->host_id = host_id;
+
+    push_host(host_list, newFactoryClient);
     return newFactoryClient;
+}
+
+void announce_to_host(ClientThreadData * host, char * cmd_args, ClientThreadData * new_client){
+    char cmd_args_2[MAX_ARGS_BUFFER_SIZE];
+    send_command_to_server(CMD_ANNOUNCE_NEW_HOST, cmd_args, NULL, host);
+    // send to new host as well
+    sprintf(cmd_args_2, "%s %d", host->ip_address, host->host_id);
+    send_command_to_server(CMD_ANNOUNCE_NEW_HOST, cmd_args_2, NULL, new_client);
 }
 
 void dashboard_init_new_host(int factory_id, const char * client_ip, host_node * factory_list, ClientThreadData ** ml_client, int factory) {
@@ -43,19 +58,21 @@ void dashboard_init_new_host(int factory_id, const char * client_ip, host_node *
     ClientThreadData *newFactoryClient;
     connect_to_tcp_server(client_ip, &newFactoryClient);
 
+    newFactoryClient->host_id = factory_id;
+
     // broadcast this new host to every other host and send their IP and ID to the new host
     host_node *factory_node = factory_list;
-    char cmd_args_2[MAX_ARGS_BUFFER_SIZE];
     while (factory_node->next != NULL) {
         factory_node = factory_node->next;
-        send_command_to_server(CMD_ANNOUNCE_NEW_HOST, cmd_args, NULL, factory_node->host);
-        // send to new host as well
-        sprintf(cmd_args_2, "%s %d", factory_node->host->ip_address, factory_node->host_id);
-        send_command_to_server(CMD_ANNOUNCE_NEW_HOST, cmd_args_2, NULL, newFactoryClient);
+        announce_to_host(factory_node->host, cmd_args, newFactoryClient);
     }
 
-    if (factory)
-        push_host(factory_list, factory_id, newFactoryClient);
+    // handle the case where the ML is already connected
+    if (*ml_client != NULL)
+        announce_to_host(*ml_client, cmd_args, newFactoryClient);
+
+    if (!factory)
+        push_host(factory_list, newFactoryClient);
     else
         *ml_client = newFactoryClient;
 }

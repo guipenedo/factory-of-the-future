@@ -1,7 +1,10 @@
-#ifndef FACTORY_OF_THE_FUTURE_PERIPHERALS_NETWORK_H
-#define FACTORY_OF_THE_FUTURE_PERIPHERALS_NETWORK_H
+#ifndef FACTORY_OF_THE_FUTURE_PERIPHERALS_H
+#define FACTORY_OF_THE_FUTURE_PERIPHERALS_H
+
+#include <time.h>
 
 typedef struct SensorData {
+    time_t time;
     double temperature, humidity, pressure;
 } SensorData;
 
@@ -17,7 +20,6 @@ short has_relay();
 // this function should edit the SensorData's argument values to those read by the sensor
 void init_sensor();
 void read_sensor_data(SensorData *);
-void read_sensor();
 
 // this function takes as argument the desired led state
 void set_led_state(short state);
@@ -25,4 +27,4 @@ void set_led_state(short state);
 // this function takes as argument the desired relay state
 void set_relay_state(short state);
 
-#endif //FACTORY_OF_THE_FUTURE_PERIPHERALS_NETWORK_H
+#endif //FACTORY_OF_THE_FUTURE_PERIPHERALS_H

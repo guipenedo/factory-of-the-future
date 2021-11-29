@@ -1,13 +1,17 @@
 #include "network/tcp.h"
 #include "interfaces/network_commands.h"
-#include "interfaces/peripherals_network.h"
+#include "interfaces/peripherals.h"
 #include "utils/host_list.h"
 #include "network/connection.h"
 #include "utils/sensor_history.h"
+#include "utils/sensor_data_utils.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
 
 host_node * host_list;
 pthread_t server_thread;
-sensor_history_buffer * sensor_history;
+SensorHistoryWriteBuffer * sensor_history;
 
 int fact_ID = -1;
 char cmd_args[MAX_ARGS_BUFFER_SIZE];
@@ -16,14 +20,14 @@ void trigger_alarm(int fact_id_alarm) {
     // TODO
 }
 
-void handle_command(int commandId, char * args, char * response, char * client_ip) {
+void handle_command(int commandId, char * args, char * response, int connfd, char * client_ip) {
     if (commandId == CMD_ANNOUNCE_NEW_HOST) {
         connect_new_factory(args, host_list);
     } else if (commandId == CMD_SEND_SENSOR_DATA) {
         int factId;
-        double temperature, humidity, pressure;
-        sscanf(args, "%d %lf %lf %lf", &factId, &temperature, &humidity, &pressure);
-        printf("Sensor data from fact_ID=%d: T=%lf H=%lf P=%lf\n", factId, temperature, humidity, pressure);
+        SensorData data;
+        sensor_data_from_command(args, &factId, &data);
+        print_sensor_data(data, factId);
     } else if (commandId == CMD_TRIGGER_ALARM) {
         int fact_id_alarm;
         sscanf(args, "%d", &fact_id_alarm);
@@ -39,11 +43,15 @@ void handle_command(int commandId, char * args, char * response, char * client_i
         short state;
         sscanf(args, "%hd", &state);
         set_relay_state(state);
+    } else if (commandId == CMD_SEND_SENSOR_HISTORY_FILE) {
+        printf("Client requested sensor history file. Sending...\n");
+        send_sensor_history_file(sensor_history, connfd);
+        response[0] = -1;
     }
 }
 
 void broadcast_sensor_data(SensorData sensorData) {
-    sprintf(cmd_args, "%d %lf %lf %lf", fact_ID, sensorData.temperature, sensorData.humidity, sensorData.pressure);
+    sprintf(cmd_args, "%d %ld %lf %lf %lf", fact_ID, sensorData.time, sensorData.temperature, sensorData.humidity, sensorData.pressure);
     host_node * host = host_list;
     while (host->next != NULL){
         host = host->next;
@@ -52,6 +60,7 @@ void broadcast_sensor_data(SensorData sensorData) {
 }
 
 int main(int argc, char **argv) {
+//    setbuf(stdout, NULL);
     if (argc != 2) {
         printf("Factory takes exactly 1 command line argument: the dashboard's IP address\n");
         exit(-1);
@@ -64,8 +73,8 @@ int main(int argc, char **argv) {
     const char * dashboardAddr = argv[1];
     printf("Starting factory! Dashboard IP address: %s\n", dashboardAddr);
 
-    connect_to_dashboard(dashboardAddr, &host_list, &fact_ID, 1);
     init_sensor_data_buffer(&sensor_history);
+    connect_to_dashboard(dashboardAddr, &host_list, &fact_ID, 1);
     init_sensor();
 
     while(1) {

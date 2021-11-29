@@ -1,5 +1,6 @@
 #include "host_list.h"
 #include "../interfaces/network_commands.h"
+#include <stdlib.h>
 
 int initialize_host_list(host_node ** empty_head) {
     host_node * head = NULL;
@@ -9,19 +10,17 @@ int initialize_host_list(host_node ** empty_head) {
 
     head->next = NULL;
     head->host = NULL;
-    head->host_id = -1;
 
     *empty_head = head;
     return 0;
 }
 
-int push_host(host_node * head, int host_id, ClientThreadData * host) {
+int push_host(host_node * head, ClientThreadData * host) {
     host_node * new_host = NULL;
     new_host = (host_node *) malloc(sizeof(host_node));
     if (new_host == NULL)
         return 1;
 
-    new_host->host_id = host_id;
     new_host->host = host;
     new_host->next = head->next;
     head->next = new_host;
@@ -39,7 +38,7 @@ void pop_host(host_node * prev) {
 
 void pop_host_by_id(host_node * head, int host_id) {
     host_node * prev = head;
-    while (prev->next != NULL && prev->next->host_id != host_id)
+    while (prev->next != NULL && prev->next->host->host_id != host_id)
         prev = prev->next;
     if (prev->next != NULL)
         pop_host(prev);

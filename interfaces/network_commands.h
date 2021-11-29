@@ -1,7 +1,7 @@
 #ifndef FACTORY_OF_THE_FUTURE_NETWORK_COMMANDS_H
 #define FACTORY_OF_THE_FUTURE_NETWORK_COMMANDS_H
 
-#define CMD_CLOSE_CONNECTION            -1
+#define CMD_CLOSE_CONNECTION            (-1)
 #define CMD_INIT_NEW_FACTORY            0 // (IP) -> (ID)
 #define CMD_ANNOUNCE_NEW_HOST           1  // (IP, ID) -> OK
 #define CMD_GET_PERIPHERALS             2  // () -> (SENSORS), (LED), (RELAY)
