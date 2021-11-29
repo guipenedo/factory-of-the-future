@@ -7,7 +7,7 @@ services:
     command: ./dashboard
   factory_1:
     image: factory-of-the-future
-    command: ./factory_test 172.29.0.2
+    command: ./factory 172.29.0.2
 #    volumes:
 #      - type: bind
 #        source: ./sensor_history.dat
