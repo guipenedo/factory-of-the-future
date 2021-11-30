@@ -17,14 +17,16 @@
 
 #define SHOW_FLAGS 1                    /* ID */
 #define PLOT_FLAGS 1                    /* ID */
+#define LIST_FLAGS 0
 #define SENDCOM_FLAGS 3                 /* ID ACTUATOR VALUE */
-#define SETTHRESHOLD_FLAGS 2            /* SENSOR VALUE */              /* OK */
+#define SETTHRESHOLD_FLAGS 2            /* SENSOR VALUE */
 #define RECORD_FLAGS 1                  /* ID */
 #define DOWNLOAD_HISTORY_FLAGS 1        /* ID */
 #define SHOW_HISTORY_FLAGS 2            /* ID LINES */
 #define DISPSENSOR_FLAGS 1              /* ID */
 #define DISPACTUATOR_FLAGS 1            /* ID */
 #define PREDICT_FLAGS 3                 /* ID SENSOR TIME */
+#define HELP_FLAGS 0
 
 /* Global variables */
 
@@ -93,6 +95,91 @@ void showCurrent(int factoryId) {
 
 }
 
+void listFactories (host_node * factory_list) {
+
+  printf("Factory IDs: ");
+  host_node * prev = factory_list;
+  while (prev->next != NULL){
+      printf("%d ", prev->next->host->host_id);
+      prev = prev->next;
+  }
+  printf("\n");
+
+}
+
+void downloadhistory (host_node * factory_list, double flags[3]) {
+
+  host_node * factory = get_host_by_id(factory_list, flags[0]);
+  if (factory == NULL) {
+      printf("\n[ERROR] Invalid factory ID.\n");
+      continue;
+  }
+  ClientThreadData * client = factory->host;
+  printf("\nThe user have selected the DOWNLOAD HISTORY command:\n");
+  printf("Factory ID >> %d\n",flags[0]);
+  send_command_to_server(CMD_SEND_SENSOR_HISTORY_FILE, NULL, NULL, client);
+  receive_sensor_history_file(client);
+
+  printf("File downloaded successfully!\n");
+
+}
+
+void showhistory (host_node * factory_list, double flags[3]) {
+
+  host_node * factory = get_host_by_id(factory_list, flags[0]);
+  if (factory == NULL) {
+      printf("\n[ERROR] Invalid factory ID.\n");
+      continue;
+  }
+
+  if (flags[1] <= 0 || flags[1] > 200) {
+      printf("\n[ERROR] Lines must be between 1 and 200.\n");
+      continue;
+  }
+
+  ClientThreadData * client = factory->host;
+  printf("\nThe user have selected the SHOW HISTORY command:\n");
+  printf("Factory ID >> %d\n", flags[0]);
+  printf("Lines >> %d\n", flags[1]);
+
+
+  SensorData * data = malloc(flags[1] * sizeof(SensorData));
+  int lines = read_sensor_data_from_file(data, flags[1], flags[0]);
+  printf("Read %d data lines\n", lines);
+  for (int i = 0; i < lines; ++i) {
+      printf("Ts=%ld T=%lf H=%lf P=%lf\n", data[i].time, data[i].temperature, data[i].humidity, data[i].pressure);
+  }
+  free(data);
+
+}
+
+void sendcommand (host_node * factory_list, double flags[3]) {
+
+  host_node * factory = get_host_by_id(factory_list, (int) flags[0]);
+  if (factory == NULL) {
+      printf("\n[ERROR] Invalid factory ID.\n");
+      continue;
+  }
+  ClientThreadData * client = factory->host;
+
+  if ((int) flags[2] != 0 && (int) flags[2] != 1) {
+      printf("\n[ERROR] Actuator state must be 0 or 1.\n");
+      continue;
+  }
+
+  sprintf(cmd_args, "%d", (int) flags[2]);
+
+  if ((int) flags[1] == 0) {// LED
+      send_command_to_server(CMD_SET_LED_STATE, cmd_args, NULL, client);
+  } else if((int) flags[1] == 1) {// RELAY
+      send_command_to_server(CMD_SET_RELAY_STATE, cmd_args, NULL, client);
+  } else {
+      printf("\n[ERROR] 0 -> LED | 1 -> RELAY\n");
+      continue;
+  }
+
+}
+
 void setTreshold(int sensor, double value) {
 
   switch (sensor) {
@@ -139,486 +226,514 @@ int plotParameter(int* param, int* time, int counter, char* title, char* nameFil
 
 }
 
-/* Main function */
+/* Check parameters function ------------------------------------------------ */
 
-int main(int argc, char **argv) {
+int checkParameters (char * string) {
 
-    if (argc != 1) {
-        printf("[ERROR] Dashboard does not take any arguments.\n");
-        exit(-1);
+  /* Function parameters */
+
+  int index = 0;
+  int nbparameters = 0;
+  char separator = " ";
+  char endline = "\n"
+
+  /* Function logics */
+
+  while (string[index] != endline) {
+
+    if (string[index] == separator) {
+      nbparameters++;
     }
 
-    /* Definition & Initialization of variables */
+    index++;
 
-    int bytes_read, index;
-    int nbcommands = 0;
-    double flags [3] = {0.0, 0.0, 0.0};
-    size_t size = MAX_SIZE * sizeof (char);
-    char *string = malloc (size);
-    char *command;
-    char *delimiter = " ";
+  }
 
-    /* Network initialization */
+  return nbparameters;
 
-    ml_client = NULL;
-    initialize_host_list(&factory_list);
-    pthread_mutex_init(&fact_id_mutex, NULL);
-    accept_tcp_connections_non_blocking(handle_command, &server_thread);
+}
 
-    /* Welcome window */
+/* -------------------------------------------------------------------------- */
 
-    printf("\e[1;1H\e[2J");
-    printf("\n%61s\n\n", "<< THE FACTORY OF THE FUTURE - DASHBOARD >>");
-    printf("%62s\n\n", "Created by MAE 2 ES students in December 2021");
-    printf("%67s\n\n","Introduce the command help to learn more about the tool");
-    printf("%61s\n\n\n","Introduce the command exit to stop the tool");
+/* Raise error function ----------------------------------------------------- */
 
-    /* First command */
+void raiseError (int errorCode) {
 
-    printf("Introduce a command >> ");
-    bytes_read = getline (&string, &size, stdin);
+  printf("\n");
 
-    /* Infinite loop */
+  switch (errorCode) {
 
-    while (1) {
+    case 1:
+      printf("[ERROR 1] Dashboard does not take any arguments.\n");
+      break;
 
-        if (nbcommands > 0) {
+    case 2:
+      printf("[ERROR 2] The command is not valid. Try again.\n");
+      break;
 
-            /* Introduce command */
+    case 3:
+      printf("[ERROR 3] The arguments are not valid. Try again.\n");
+      break;
 
-            printf("Introduce a command >> ");
+    default:
+      printf("[ERROR 4] Unknown error. Try again.\n");
 
-            bytes_read = getline (&string, &size, stdin);
+  }
 
-        }
+}
 
-        nbcommands++;
+/* -------------------------------------------------------------------------- */
 
-        if (bytes_read == -1) {
-            printf("\n[ERROR] The command is not valid. Try again.\n");
-            continue;
-        }
+/* Capture flags function --------------------------------------------------- */
 
-        else {
+int captureFlags (int nbparams, int nbexpected, double flags[3], char* command) {
 
-            /* Divide the input string in command + flags using the space delimiter */
+  /* Function parameters */
 
-            command = strtok (string, delimiter);
+  char* delimiter = " ";
 
-            /* Select between different commands */
+  /* Function logics */
 
-            /* 1. SHOW command */
+  if (nbparms != nbexpected) {
+    raiseError (3);
+    return 1;
+  }
 
-            if (strcmp (command, "show") == 0) {
+  for (int index = 0; index < nbparams; index++) {
+    command = strtok (NULL, delimiter);
+    flags[index] = strtol(command, NULL, 10);
+  }
 
-                /* Capture 1 flag (id) */
+  return 0;
 
-                for (index = 0; index < SHOW_FLAGS; index++) {
+}
 
-                    command = strtok (NULL, delimiter);
+/* -------------------------------------------------------------------------- */
 
-                    /* Transform from string to int */
+/* Main function ------------------------------------------------------------ */
 
-                    flags[index] = (double) strtol(command, NULL, 10);
+int main (int argc, char **argv) {
 
-                }
+  /* Print an error message if args are provided */
 
-                command = strtok (NULL, delimiter);
-                if (command != NULL) {
-                    printf("\n[ERROR] The command is not valid. Try again.\n");
-                    continue;
-                }
+  if (argc != 1) {
+    printf("[ERROR 01] Dashboard does not take any arguments.\n");
+    exit(-1);
+  }
 
-                /* Do something here */
+  /* Definition & initialization of variables */
 
-                showCurrent(((int) flags[0]));
+  int bytes_read, status;
+  int test = 1;
+  int nbcommands, nbparameters = 0;
+  double flags [3] = {0.0, 0.0, 0.0};
+  size_t size = MAX_SIZE * sizeof (char);
+  char *string = malloc (size);
+  char *command;
+  char *delimiter = " ";
 
-                /* Do something here */
+  /* Network initialization */
 
+  ml_client = NULL;
+  initialize_host_list(&factory_list);
+  pthread_mutex_init(&fact_id_mutex, NULL);
+  accept_tcp_connections_non_blocking(handle_command, &server_thread);
 
-                continue;
+  /* Welcome window */
 
-            }
+  printf("\e[1;1H\e[2J");
+  printf("\n%61s\n\n", "<< THE FACTORY OF THE FUTURE - DASHBOARD >>");
+  printf("%62s\n\n", "Created by MAE 2 ES students in December 2021");
+  printf("%67s\n\n","Introduce the command help to learn more about the tool");
+  printf("%61s\n\n\n","Introduce the command exit to stop the tool");
 
-            else if (strcmp (command, "plot") == 0) {
-                /* Capture 1 flags (id) */
+  /* First command */
 
-                for (index = 0; index < PLOT_FLAGS; index++) {
+  printf("Introduce a command >> ");
+  bytes_read = getline (&string, &size, stdin);
 
-                    command = strtok (NULL, delimiter);
+  /* Infinite loop */
 
-                    /* Transform from string to int */
+  while (1) {
 
-                    flags[index] = (double) strtol(command, NULL, 10);
+    if (nbcommands > 0) {
 
-                }
+      /* Introduce a command */
 
-                command = strtok (NULL, delimiter);
-                if (command != NULL) {
-                    printf("\n[ERROR] The command is not valid. Try again.\n");
-                    continue;
-                }
-
-                plot_sensors(flags[0], database, current);
-
-                printf("\nThe user have selected the PLOT command:\n");
-                printf("Factory ID >> %d\n",flags[0]);
-
-            }
-
-            else if (strcmp (command, "list\n") == 0) {
-                /* Capture 0 flags */
-                printf("\nThe user has selected the LIST command:\n");
-                printf("Factory IDs: ");
-                host_node * prev = factory_list;
-                while (prev->next != NULL){
-                    printf("%d ", prev->next->host->host_id);
-                    prev = prev->next;
-                }
-                printf("\n");
-                continue;
-
-            }
-
-            else if (strcmp (command, "sendcom") == 0) {
-
-                /* Capture 3 flags (id, actuator, value) */
-
-                for (index = 0; index < SENDCOM_FLAGS; index++) {
-
-                    command = strtok (NULL, delimiter);
-
-                    /* Transform from string to int */
-
-                    flags[index] = (double) strtol(command, NULL, 10);
-
-                }
-
-                command = strtok (NULL, delimiter);
-                if (command != NULL) {
-                    printf("\n[ERROR] The command is not valid. Try again.\n");
-
-                    continue;
-                }
-
-                /* Do something here */
-                host_node * factory = get_host_by_id(factory_list, flags[0]);
-                if (factory == NULL) {
-                    printf("\n[ERROR] Invalid factory ID.\n");
-                    continue;
-                }
-                ClientThreadData * client = factory->host;
-
-                if (flags[2] != 0 && flags[2] != 1) {
-                    printf("\n[ERROR] Actuator state must be 0 or 1.\n");
-                    continue;
-                }
-
-                sprintf(cmd_args, "%d", flags[2]);
-
-                if (flags[1] == 0) {// LED
-                    send_command_to_server(CMD_SET_LED_STATE, cmd_args, NULL, client);
-                } else if(flags[1] == 1) {// RELAY
-                    send_command_to_server(CMD_SET_RELAY_STATE, cmd_args, NULL, client);
-                } else {
-                    printf("\n[ERROR] 0 -> LED | 1 -> RELAY\n");
-                    continue;
-                }
-
-
-                /* Do something here */
-
-                /* Test */
-
-                printf("\nThe user have selected the SENDCOM command:\n");
-                printf("Factory ID >> %d\n",flags[0]);
-                printf("Actuator ID >> %d\n",flags[1]);
-                printf("Value >> %d\n",flags[2]);
-
-
-                continue;
-
-            }
-
-            /* 4. SETTHRESHOLD command */
-
-            else if (strcmp (command, "setthreshold") == 0) {
-
-                /* Capture 2 flags (sensor, value) */
-
-                for (index = 0; index < SETTHRESHOLD_FLAGS; index++) {
-
-                    command = strtok (NULL, delimiter);
-
-                    /* Transform from string to int */
-
-                    flags[index] = (double) strtol(command, NULL, 10);
-
-                }
-
-                command = strtok (NULL, delimiter);
-                if (command != NULL) {
-                    printf("\n[ERROR] The command is not valid. Try again.\n");
-
-                    continue;
-                }
-
-                /* Do something here */
-
-                setTreshold (((int) flags[0]), flags[1]);
-
-                /* Do something here */
-
-                continue;
-
-            }
-
-            else if (strcmp (command, "downloadhistory") == 0) {
-
-                /* Capture 1 flag (id) */
-
-                for (index = 0; index < DOWNLOAD_HISTORY_FLAGS; index++) {
-
-                    command = strtok (NULL, delimiter);
-
-                    /* Transform from string to int */
-
-                    flags[index] = (double) strtol(command, NULL, 10);
-
-                }
-
-                command = strtok (NULL, delimiter);
-                if (command != NULL) {
-                    printf("\n[ERROR] The command is not valid. Try again.\n");
-                    continue;
-                }
-
-                host_node * factory = get_host_by_id(factory_list, flags[0]);
-                if (factory == NULL) {
-                    printf("\n[ERROR] Invalid factory ID.\n");
-                    continue;
-                }
-                ClientThreadData * client = factory->host;
-                printf("\nThe user have selected the DOWNLOAD HISTORY command:\n");
-                printf("Factory ID >> %d\n",flags[0]);
-                send_command_to_server(CMD_SEND_SENSOR_HISTORY_FILE, NULL, NULL, client);
-                receive_sensor_history_file(client);
-
-                printf("File downloaded successfully!\n");
-
-                continue;
-
-            }
-
-            else if (strcmp (command, "showhistory") == 0) {
-
-                /* Capture 2 flags (id, lines) */
-
-                for (index = 0; index < SHOW_HISTORY_FLAGS; index++) {
-
-                    command = strtok (NULL, delimiter);
-
-                    /* Transform from string to int */
-
-                    flags[index] = (int) strtol(command, NULL, 10);
-
-                }
-
-                command = strtok (NULL, delimiter);
-                if (command != NULL) {
-                    printf("\n[ERROR] The command is not valid. Try again.\n");
-                    continue;
-                }
-
-                host_node * factory = get_host_by_id(factory_list, flags[0]);
-                if (factory == NULL) {
-                    printf("\n[ERROR] Invalid factory ID.\n");
-                    continue;
-                }
-
-                if (flags[1] <= 0 || flags[1] > 200) {
-                    printf("\n[ERROR] Lines must be between 1 and 200.\n");
-                    continue;
-                }
-
-                ClientThreadData * client = factory->host;
-                printf("\nThe user have selected the SHOW HISTORY command:\n");
-                printf("Factory ID >> %d\n", flags[0]);
-                printf("Lines >> %d\n", flags[1]);
-
-
-                SensorData * data = malloc(flags[1] * sizeof(SensorData));
-                int lines = read_sensor_data_from_file(data, flags[1], flags[0]);
-                printf("Read %d data lines\n", lines);
-                for (int i = 0; i < lines; ++i) {
-                    printf("Ts=%ld T=%lf H=%lf P=%lf\n", data[i].time, data[i].temperature, data[i].humidity, data[i].pressure);
-                }
-                free(data);
-            }
-
-            else if (strcmp (command, "dispsensor") == 0) {
-
-                /* Capture 1 flag (id) */
-
-                for (index = 0; index < DISPSENSOR_FLAGS; index++) {
-
-                    command = strtok (NULL, delimiter);
-
-                    /* Transform from string to int */
-
-                    flags[index] = (double) strtol(command, NULL, 10);
-
-                }
-
-                command = strtok (NULL, delimiter);
-                if (command != NULL) {
-                    printf("\n[ERROR] The command is not valid. Try again.\n");
-
-                    continue;
-                }
-
-                /* Do something here */
-
-
-
-                /* Do something here */
-
-                /* Test */
-
-                printf("\nThe user have selected the DISPSENSOR command:\n");
-                printf("Factory ID >> %d\n",flags[0]);
-
-
-                continue;
-
-            }
-
-            else if (strcmp (command, "dispactuator") == 0) {
-
-                /* Capture 1 flag (id) */
-
-                for (index = 0; index < DISPACTUATOR_FLAGS; index++) {
-
-                    command = strtok (NULL, delimiter);
-
-                    /* Transform from string to int */
-
-                    flags[index] = (double) strtol(command, NULL, 10);
-
-                }
-
-                command = strtok (NULL, delimiter);
-                if (command != NULL) {
-                    printf("\n[ERROR] The command is not valid. Try again.\n");
-
-                    continue;
-                }
-
-                /* Do something here */
-
-
-
-                /* Do something here */
-
-                /* Test */
-
-                printf("\nThe user have selected the DISPACTUATOR command:\n");
-                printf("Factory ID >> %d\n",flags[0]);
-
-
-                continue;
-
-            }
-
-            else if (strcmp (command, "predict") == 0) {
-
-                /* Capture 3 flags (id, sensor, time) */
-
-                for (index = 0; index < PREDICT_FLAGS; index++) {
-
-                    command = strtok (NULL, delimiter);
-
-                    /* Transform from string to int */
-
-                    flags[index] = (double) strtol(command, NULL, 10);
-
-                }
-
-                command = strtok (NULL, delimiter);
-                if (command != NULL) {
-                    printf("\n[ERROR] The command is not valid. Try again.\n");
-
-                    continue;
-                }
-
-                /* Do something here */
-
-
-
-                /* Do something here */
-
-                /* Test */
-
-                printf("\nThe user have selected the PREDICT command:\n");
-                printf("Factory ID >> %d\n",flags[0]);
-                printf("Sensor ID >> %d\n",flags[1]);
-                printf("Time >> %d\n",flags[2]);
-
-
-                continue;
-
-            }
-
-            /* 10. HELP Command */
-
-            else if (strcmp (command, "help\n") == 0) {
-
-              printf("\n");
-              printf("Introduce a valid command and the required parameters:\n");
-              printf("  - show id >> show data captured by the sensors of one factory via its ID.\n");
-              printf("  - plot id sensor >> plot data captured by a sensor of one factory.\n");
-              printf("  - sendcom id actuator value >> send a command to one actuator of one factory.\n");
-              printf("    - LED >> value = 0\n");
-              printf("    - Relay >> value = 1\n");
-              printf("  - settreshold sensor value >> set a threshold for a specific kind of sensor:\n");
-              printf("    - temperature >> sensor = 1\n");
-              printf("    - pressure >> sensor = 2\n");
-              printf("    - humidity >> sensor = 3\n");
-              printf("  - downloadhistory id >> download data of one factory.\n");
-              printf("  - dispsensor id >> display the list of sensors of one factory.\n");
-              printf("  - dispactuator id >> display the list of actuators of one factory.\n");
-              printf("  - predict sensor time >> predict a future value of a sensor using ML.\n");
-
-              continue;
-
-            }
-
-            /* 11. Exit command */
-
-            else if (strcmp (command, "exit\n") == 0) {
-
-              printf("\e[1;1H\e[2J");
-              break;
-
-            }
-
-            else {
-                printf("\n[ERROR] The command is not valid. Try again\n");
-
-                continue;
-            }
-
-        }
+      printf("Introduce a command >> ");
+      bytes_read = getline (&string, &size, stdin);
 
     }
 
-    free(string);
+    nbcommands++;
 
-    /* Close network */
+    /* Error while reading data from keyboard */
 
-    close_all_connections(factory_list);
-    free_host_list(factory_list);
-    pthread_mutex_destroy(&fact_id_mutex);
+    if (bytes_read == -1) {
+      raiseError (2);
+      continue;
+    }
 
-    return 0;
+
+
+    nbparameters = checkParameters (string);
+    command = strtok (string, delimiter);
+
+    /* Select between different commands */
+
+    /* SHOW COMMAND --------------------------------------------------------- */
+
+    if (strcmp (command, "show") == 0) {
+
+      /* Capture flags */
+
+      status = captureFlags (nbparameters, SHOW_FLAGS, flags, command);
+
+      if (status == 1) {
+        continue;
+      }
+
+      /* Command implementation */
+
+      showCurrent((int) flags[0]);
+
+      /* Test */
+
+      if (test == 1) {
+        printf("\n");
+        printf("The user have selected the SHOW command:\n");
+        printf("Factory ID >> %d\n",flags[0]);
+      }
+
+    }
+
+    /* ---------------------------------------------------------------------- */
+
+    /* PLOT COMMAND --------------------------------------------------------- */
+
+    else if (strcmp (command, "plot") == 0) {
+
+      /* Capture flags */
+
+      status = captureFlags (nbparameters, PLOT_FLAGS, flags, command);
+
+      if (status == 1) {
+        continue;
+      }
+
+      /* Command implementation */
+
+      plot_sensors(flags[0], database, current);
+
+      /* Test */
+
+      if (test == 1) {
+        printf("\n");
+        printf("The user have selected the PLOT command:\n");
+        printf("Factory ID >> %d\n",flags[0]);
+      }
+
+    }
+
+    /* ---------------------------------------------------------------------- */
+
+    /* LIST COMMAND --------------------------------------------------------- */
+
+    else if (strcmp (command, "list\n") == 0) {
+
+      /* Capture flags */
+
+      status = captureFlags (nbparameters, LIST_FLAGS, flags, command);
+
+      if (status == 1) {
+        continue;
+      }
+
+      /* Command implementation */
+
+      listFactories (factory_list);
+
+      /* Test */
+
+      if (test == 1) {
+        printf("\n");
+        printf("The user have selected the LIST command:\n");
+      }
+
+    }
+
+    /* ---------------------------------------------------------------------- */
+
+    /* SENDCOM COMMAND ------------------------------------------------------ */
+
+    else if (strcmp (command, "sendcom") == 0) {
+
+      /* Capture flags */
+
+      status = captureFlags (nbparameters, SENDCOM_FLAGS, flags, command);
+
+      if (status == 1) {
+        continue;
+      }
+
+      /* Command implementation */
+
+      sendcommand (factory_list, flags);
+
+      /* Test */
+
+      if (test == 1) {
+        printf("\n");
+        printf("The user have selected the SENDCOM command:\n");
+        printf("Factory ID >> %d\n",flags[0]);
+        printf("Actuator ID >> %d\n",flags[1]);
+        printf("Value >> %d\n",flags[2]);
+      }
+
+    }
+
+    /* ---------------------------------------------------------------------- */
+
+    /* SETTHRESHOLD COMMAND ------------------------------------------------- */
+
+    else if (strcmp (command, "setthreshold") == 0) {
+
+      /* Capture flags */
+
+      status = captureFlags (nbparameters, SETTHRESHOLD_FLAGS, flags, command);
+
+      if (status == 1) {
+        continue;
+      }
+
+      /* Command implementation */
+
+      setTreshold ((int) flags[0], flags[1]);
+
+      /* Test */
+
+      if (test == 1) {
+        printf("\n");
+        printf("The user have selected the SETTHRESHOLD command:\n");
+        printf("Sensor >> %d\n",flags[0]);
+        printf("Value >> %d\n",flags[1]);
+      }
+
+    }
+
+    /* ---------------------------------------------------------------------- */
+
+    /* DOWNLOAD HISTORY COMMAND --------------------------------------------- */
+
+    else if (strcmp (command, "downloadhistory") == 0) {
+
+      /* Capture flags */
+
+      status = captureFlags (nbparameters, DOWNLOAD_HISTORY_FLAGS, flags, command);
+
+      if (status == 1) {
+        continue;
+      }
+
+      /* Command implementation */
+
+      downloadhistory (factory_list, flags);
+
+      /* Test */
+
+      if (test == 1) {
+        printf("\n");
+        printf("The user have selected the DOWNLOADHISTORY command:\n");
+        printf("Factory ID >> %d\n",flags[0]);
+      }
+
+    }
+
+    /* ---------------------------------------------------------------------- */
+
+    /* SHOW HISTORY COMMAND ------------------------------------------------- */
+
+    else if (strcmp (command, "showhistory") == 0) {
+
+      /* Capture flags */
+
+      status = captureFlags (nbparameters, SHOW_HISTORY_FLAGS, flags, command);
+
+      if (status == 1) {
+        continue;
+      }
+
+      /* Command implementation */
+
+      showhistory (factory_list, flags[3]);
+
+      /* Test */
+
+      if (test == 1) {
+        printf("\n");
+        printf("The user have selected the TEST command:\n");
+        printf("Factory ID >> %d\n",flags[0]);
+        printf("Lines >> %d\n",flags[1]);
+      }
+
+    }
+
+    /* ---------------------------------------------------------------------- */
+
+    /* DISPSENSOR COMMAND --------------------------------------------------- */
+
+    else if (strcmp (command, "dispsensor") == 0) {
+
+      /* Capture flags */
+
+      status = captureFlags (nbparameters, DISPSENSOR_FLAGS, flags, command);
+
+      if (status == 1) {
+        continue;
+      }
+
+      /* Command implementation */
+
+      // Put a function here
+
+      /* Test */
+
+      if (test == 1) {
+        printf("\n");
+        printf("The user have selected the DISPSENSOR command:\n");
+        printf("Factory ID >> %d\n",flags[0]);
+      }
+
+    }
+
+    /* ---------------------------------------------------------------------- */
+
+    /* DISPACTUATOR COMMAND ------------------------------------------------- */
+
+    else if (strcmp (command, "dispactuator") == 0) {
+
+      /* Capture flags */
+
+      status = captureFlags (nbparameters, DISPACTUATOR_FLAGS, flags, command);
+
+      if (status == 1) {
+        continue;
+      }
+
+      /* Command implementation */
+
+      // Put a function here
+
+      /* Test */
+
+      if (test == 1) {
+        printf("\n");
+        printf("The user have selected the DISPACTUATOR command:\n");
+        printf("Factory ID >> %d\n",flags[0]);
+      }
+
+    }
+
+    /* ---------------------------------------------------------------------- */
+
+    /* PREDICT COMMAND ------------------------------------------------------ */
+
+    else if (strcmp (command, "predict") == 0) {
+
+      /* Capture flags */
+
+      status = captureFlags (nbparameters, PREDICT_FLAGS, flags, command);
+
+      if (status == 1) {
+        continue;
+      }
+
+      /* Command implementation */
+
+      // Put a function here
+
+      /* Test */
+
+      if (test == 1) {
+        printf("\n");
+        printf("The user have selected the PREDICT command:\n");
+        printf("Factory ID >> %d\n",flags[0]);
+        printf("Sensor ID >> %d\n",flags[1]);
+        printf("Time >> %d\n",flags[2]);
+      }
+
+    }
+
+    /* ---------------------------------------------------------------------- */
+
+    /* HELP COMMAND --------------------------------------------------------- */
+
+    else if (strcmp (command, "help\n") == 0) {
+
+      /* Capture flags */
+
+      status = captureFlags (nbparameters, HELP_FLAGS, flags, command);
+
+      if (status == 1) {
+        continue;
+      }
+
+      /* Command implementation */
+
+      printf("\n");
+      printf("Introduce a valid command and the required parameters:\n");
+      printf("  - show id >> show data captured by the sensors of one factory via its ID.\n");
+      printf("  - plot id sensor >> plot data captured by a sensor of one factory.\n");
+      printf("  - sendcom id actuator value >> send a command to one actuator of one factory.\n");
+      printf("    - LED >> value = 0\n");
+      printf("    - Relay >> value = 1\n");
+      printf("  - settreshold sensor value >> set a threshold for a specific kind of sensor:\n");
+      printf("    - temperature >> sensor = 1\n");
+      printf("    - pressure >> sensor = 2\n");
+      printf("    - humidity >> sensor = 3\n");
+      printf("  - downloadhistory id >> download data of one factory.\n");
+      printf("  - dispsensor id >> display the list of sensors of one factory.\n");
+      printf("  - dispactuator id >> display the list of actuators of one factory.\n");
+      printf("  - predict sensor time >> predict a future value of a sensor using ML.\n");
+
+    }
+
+    /* ---------------------------------------------------------------------- */
+
+    /* EXIT COMMAND --------------------------------------------------------- */
+
+    else if (strcmp (command, "exit\n") == 0) {
+
+      /* Capture flags */
+
+      status = captureFlags (nbparameters, HELP_FLAGS, flags, command);
+
+      if (status == 1) {
+        continue;
+      }
+
+      /* Command implementation */
+
+      printf("\e[1;1H\e[2J");
+      break;
+
+    }
+
+    /* ---------------------------------------------------------------------- */
+
+    else {
+      raiseError(2);
+      continue;
+    }
+
+  }
+
+  /* Close network */
+
+  close_all_connections(factory_list);
+  free_host_list(factory_list);
+  pthread_mutex_destroy(&fact_id_mutex);
+
+  return 0;
+
 }
