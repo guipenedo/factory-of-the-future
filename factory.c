@@ -46,6 +46,16 @@ void handle_command(int commandId, char * args, char * response, int connfd, cha
         printf("Client requested sensor history file. Sending...\n");
         send_sensor_history_file(sensor_history, connfd);
         response[0] = -1;
+
+        int mlines = 100;
+
+        SensorData * data = malloc(mlines * sizeof(SensorData));
+        int lines = read_sensor_data_from_file(data, mlines, 1);
+        printf("Read %d data lines\n", lines);
+        for (int i = 0; i < lines; ++i) {
+            printf("Ts=%ld T=%lf H=%lf P=%lf\n", data[i].time, data[i].temperature, data[i].humidity, data[i].pressure);
+        }
+        free(data);
     } else if (commandId == CMD_GET_ALARM_STATE) {
         printf("Client requested alarm state.\n");
         sprintf(response, "%hd", alarm_state);
