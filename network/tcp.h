@@ -8,6 +8,7 @@
 #define MAX_CLIENTS 8
 #define MAX_BUFFER_SIZE 80
 #define MAX_ARGS_BUFFER_SIZE (MAX_BUFFER_SIZE - 4)
+#define IP_ADDRESS_SIZE 20
 
 #define PORT 8080
 #define SA struct sockaddr
@@ -17,7 +18,7 @@ typedef void (* command_handler_f) (int, char *, char *, int, char *);
 typedef struct ServerThreadData {
     command_handler_f command_handler;
     int connfd;
-    char client_ip[MAX_BUFFER_SIZE];
+    char client_ip[IP_ADDRESS_SIZE];
 } ServerThreadData;
 
 typedef struct ClientThreadData {
@@ -25,7 +26,7 @@ typedef struct ClientThreadData {
     pthread_mutex_t command_mutex;
     int sockfd;
     int host_id;
-    char ip_address[MAX_BUFFER_SIZE];
+    char ip_address[IP_ADDRESS_SIZE];
     char command[MAX_BUFFER_SIZE];
     char response[MAX_BUFFER_SIZE];
     short command_to_handle, response_to_handle;

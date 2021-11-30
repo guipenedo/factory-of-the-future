@@ -11,5 +11,6 @@
 #define CMD_SEND_SENSOR_HISTORY_FILE    6 // (no parameters) -> file stream
 #define CMD_SET_LED_STATE               7 // state -> OK
 #define CMD_SET_RELAY_STATE             8 // state -> OK
+#define CMD_GET_ALARM_STATE             9 // () -> 0 or 1
 
 #endif //FACTORY_OF_THE_FUTURE_NETWORK_COMMANDS_H

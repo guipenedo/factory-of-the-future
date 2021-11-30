@@ -134,7 +134,7 @@ void init_sensor(){
     dev.delay_ms = user_delay_ms;
 
     rslt = bme280_init(&dev);
-    printf("\r\n BME280 Init Result is:%d \r\n",rslt);
+    //printf("\r\n BME280 Init Result is:%d \r\n",rslt);
 
     if (rslt==0) sensor_connected=1;
     else return;
@@ -175,17 +175,16 @@ void read_sensor_data(SensorData *data)
 
 void trigger_factory_alarm(int factID)
 {
-    pinMode (buzzer,OUTPUT) ;
-    pinMode (led,OUTPUT) ;
-    int i=0;
-    for (;i<6;i++)
-    {
-        digitalWrite (buzzer, HIGH) ;  // On
-        digitalWrite (led, HIGH) ;
-        delay (200) ;               // mS
-        digitalWrite (buzzer, LOW) ;   // Off
-        digitalWrite (led, LOW);
-        delay (500) ;
+    pinMode(buzzer, OUTPUT);
+    pinMode(led, OUTPUT);
+    int i = 0;
+    for (; i<75; i++) { // 75*0.8 = 60
+        digitalWrite(buzzer, HIGH);  // On
+        digitalWrite(led, HIGH);
+        delay(200);               // mS
+        digitalWrite(buzzer, LOW);   // Off
+        digitalWrite(led, LOW);
+        delay(500);
     }
 }
 

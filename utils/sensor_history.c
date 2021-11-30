@@ -36,7 +36,7 @@ void write_sensor_data_to_file(SensorHistoryWriteBuffer * data_buffer, short loc
     if (lock)
         pthread_mutex_lock(&(data_buffer->data_mutex));
 
-    FILE *fp = fopen(SENSOR_HISTORY_FILENAME, "ab");
+    FILE *fp = fopen(SENSOR_HISTORY_FILENAME, "a");
 
     if (data_buffer->currIdx > 0)
         fwrite(data_buffer->data, sizeof(SensorData), data_buffer->currIdx, fp);
@@ -85,12 +85,7 @@ void send_sensor_history_file(SensorHistoryWriteBuffer * data_buffer, int connfd
         return;
     }
 
-    fseek(fp, 0, SEEK_END); // seek to end of file
-    long fsize = ftell(fp); // get current file pointer
-    fseek(fp, 0, SEEK_SET); // seek back to beginning of file
-
-    char data[SEND_DATA_SIZE] = {0}, fsize_res[MAX_BUFFER_SIZE];
-    sprintf(fsize_res, "%ld", fsize);
+    char data[SEND_DATA_SIZE] = {0};
 
 
     int n;
@@ -118,6 +113,7 @@ void receive_sensor_history_file(ClientThreadData * data) {
 
     do {
         n = read(data->sockfd, buffer, SEND_DATA_SIZE);
+        printf("n=%d\n", n);
         fwrite(buffer, 1, n, fp);
         bzero(buffer, SEND_DATA_SIZE);
     } while(n == SEND_DATA_SIZE);

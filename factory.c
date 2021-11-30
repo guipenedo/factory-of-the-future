@@ -15,6 +15,7 @@ SensorHistoryWriteBuffer * sensor_history;
 
 int fact_ID = -1;
 char cmd_args[MAX_ARGS_BUFFER_SIZE];
+short alarm_state = 0;
 
 void handle_command(int commandId, char * args, char * response, int connfd, char * client_ip) {
     if (commandId == CMD_ANNOUNCE_NEW_HOST) {
@@ -28,7 +29,9 @@ void handle_command(int commandId, char * args, char * response, int connfd, cha
         int fact_id_alarm;
         sscanf(args, "%d", &fact_id_alarm);
         printf("[!] Alarm triggered because of factory ID %d\n.", fact_id_alarm);
+        alarm_state = 1;
         trigger_factory_alarm(fact_id_alarm);
+        alarm_state = 0;
     } else if (commandId == CMD_GET_PERIPHERALS) {
         sprintf(response, "%d %d %d", has_sensors(), has_led(), has_relay());
     } else if (commandId == CMD_SET_LED_STATE) {
@@ -43,6 +46,9 @@ void handle_command(int commandId, char * args, char * response, int connfd, cha
         printf("Client requested sensor history file. Sending...\n");
         send_sensor_history_file(sensor_history, connfd);
         response[0] = -1;
+    } else if (commandId == CMD_GET_ALARM_STATE) {
+        printf("Client requested alarm state.\n");
+        sprintf(response, "%hd", alarm_state);
     }
 }
 

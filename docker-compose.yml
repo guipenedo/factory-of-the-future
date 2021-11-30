@@ -3,6 +3,8 @@ version: "3.9"
 services:
   dashboard:
     image: factory-of-the-future
+    stdin_open: true # docker run -i
+    tty: true        # docker run -t
     build: .
     command: ./dashboard
   factory_1:
