@@ -57,7 +57,7 @@ void free_sensor_data_buffer(SensorHistoryWriteBuffer ** data_buffer) {
 
 FILE * open_sensor_history_file(int factId, const char * modes){
     char filename[50];
-    sprintf(filename, "sensor_history.dat");
+    sprintf(filename, "sensor_history_%d.dat", factId);
     return fopen(filename, modes);
 }
 
