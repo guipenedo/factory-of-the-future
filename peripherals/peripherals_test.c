@@ -47,7 +47,7 @@ void read_sensor_data(SensorData *data)
     i++;
 }
 
-void trigger_factory_alarm(int factID)
+void trigger_factory_alarm(int factID, short * trigger_factory_alarm)
 {
     printf("Alarm triggered");
 }

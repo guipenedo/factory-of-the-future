@@ -29,9 +29,7 @@ void handle_command(int commandId, char * args, char * response, int connfd, cha
         int fact_id_alarm;
         sscanf(args, "%d", &fact_id_alarm);
         printf("[!] Alarm triggered because of factory ID %d\n.", fact_id_alarm);
-        alarm_state = 1;
-        trigger_factory_alarm(fact_id_alarm);
-        alarm_state = 0;
+        trigger_factory_alarm(fact_id_alarm, &alarm_state);
     } else if (commandId == CMD_GET_PERIPHERALS) {
         sprintf(response, "%d %d %d", has_sensors(), has_led(), has_relay());
     } else if (commandId == CMD_SET_LED_STATE) {
@@ -82,7 +80,7 @@ int main(int argc, char **argv) {
     short sensors_enabled = has_sensors();
 
     while(1) {
-        if (sensors_enabled) {
+        if (sensors_enabled && !alarm_state) {
             SensorData sensorData;
             read_sensor_data(&sensorData);
             store_sensor_data(sensor_history, sensorData);

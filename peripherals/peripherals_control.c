@@ -24,6 +24,8 @@
 #define buzzer  21
 #define led  22
 
+pthread_t alarm_thread;
+
 //////////////////////////////////////////////
 short sensor_connected = 0;
 
@@ -111,7 +113,6 @@ int8_t user_i2c_write(uint8_t id, uint8_t reg_addr, uint8_t *data, uint16_t len)
 }
 
 struct bme280_dev dev;
-short sensor_connected;
 
 void init_sensor(){
     // init actuators
@@ -173,12 +174,12 @@ void read_sensor_data(SensorData *data)
     data->pressure = comp_data.pressure;
 }
 
-void trigger_factory_alarm(int factID)
-{
+void run_alarm(short * alarm_state){
+    *alarm_state = 1;
     pinMode(buzzer, OUTPUT);
     pinMode(led, OUTPUT);
     int i = 0;
-    for (; i<75; i++) { // 75*0.8 = 60
+    for (; i<75; i++) { // 75*0.8 = 60 s
         digitalWrite(buzzer, HIGH);  // On
         digitalWrite(led, HIGH);
         delay(200);               // mS
@@ -186,6 +187,12 @@ void trigger_factory_alarm(int factID)
         digitalWrite(led, LOW);
         delay(500);
     }
+    *alarm_state = 0;
+}
+
+void trigger_factory_alarm(int factID, short * alarm_state)
+{
+    pthread_create(&alarm_thread, NULL, (void * (*) (void *)) run_alarm, alarm_state);
 }
 
 
