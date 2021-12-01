@@ -25,7 +25,7 @@ ClientThreadData * connect_new_factory(char * args, host_node * host_list) {
     char ip_address[20];
     int host_id;
     sscanf(args, "%s %d", ip_address, &host_id);
-    printf("Connecting to new factory ID=%d at %s\n.", host_id, ip_address);
+    printf("Connecting to new factory ID=%d at %s.\n", host_id, ip_address);
 
     ClientThreadData * newFactoryClient;
     connect_to_tcp_server(ip_address, &newFactoryClient);
@@ -46,9 +46,9 @@ void announce_to_host(ClientThreadData * host, char * cmd_args, ClientThreadData
 
 void dashboard_init_new_host(int factory_id, const char * client_ip, host_node * factory_list, ClientThreadData ** ml_client, int factory) {
     if (factory)
-        printf("New factory connected with ID=%d from %s\n.", factory_id, client_ip);
+        printf("\nNew factory connected with ID=%d from %s.\n", factory_id, client_ip);
     else
-        printf("ML module connected with ID=%d from %s\n.", factory_id, client_ip);
+        printf("\nML module connected with ID=%d from %s.\n", factory_id, client_ip);
 
     char cmd_args[MAX_ARGS_BUFFER_SIZE];
     sprintf(cmd_args, "%s %d", client_ip, factory_id);
