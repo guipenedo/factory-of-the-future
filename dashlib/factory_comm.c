@@ -53,3 +53,22 @@ void listPeripherals(host_node * factory_list, int factoryId) {
     printf("Factory %d: SENSORS: %s | LED: %s | RELAY: %s\n", factoryId, (sensors ? "YES" : "NO"), (led ? "YES" : "NO"), (relay ? "YES" :
     "NO"));
 }
+
+void getPrediction(host_node * factory_list, ClientThreadData * ml_client, int fact_id, int h, int m, int s) {
+    host_node * factory = get_host_by_id(factory_list, fact_id);
+    if (factory == NULL) {
+        printf("\n[ERROR] Invalid factory ID.\n");
+        return;
+    }
+    else if ( (h < 0 || h > 23) || (m < 0 || m > 59) || (s < 0 || s > 59))
+    {
+        printf("\n[ERROR] Invalid time input, please use hh mm ss.\n");
+        return;
+    }
+    
+
+    sprintf(cmd_args, "%d %d %d %d", fact_id, h, m, s);
+    char res[MAX_BUFFER_SIZE];
+    send_command_to_server(CMD_INIT_ML, cmd_args, res, ml_client);
+    printf("Prediction for Factory %d at %d:%d:%d = %s\n", fact_id, h, m, s, res);
+}

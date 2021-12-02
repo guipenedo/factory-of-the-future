@@ -367,7 +367,7 @@ int main (int argc, char **argv) {
 
             /* Command implementation */
 
-            // Put a function here
+            getPrediction(factory_list,ml_client,(int) flags[0],(int) flags[1],(int) flags[2],(int) flags[3]);
 
             /* Test */
 
@@ -375,8 +375,7 @@ int main (int argc, char **argv) {
                 printf("\n");
                 printf("The user have selected the PREDICT command:\n");
                 printf("Factory ID >> %d\n",(int) flags[0]);
-                printf("Sensor ID >> %d\n",(int) flags[1]);
-                printf("Time >> %d\n",(int) flags[2]);
+                printf("Time >> %d %d %d\n",(int) flags[1], (int) flags[2], (int) flags[3]);
             }
 
         }
@@ -413,7 +412,7 @@ int main (int argc, char **argv) {
             printf("  - downloadhistory id >> download data of one factory.\n");
             printf("  - listperipherals id >> display the list of sensors and actuators of one factory.\n");
             printf("  - listalarms >> show all the factories with alarm.\n");
-            printf("  - predict sensor time >> predict a future value of a sensor using ML.\n");
+            printf("  - predict id hh mm ss >> predict a future value of the temperature in a factory using ML.\n");
 
         }
 
