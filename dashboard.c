@@ -196,7 +196,7 @@ int main (int argc, char **argv) {
 
             /* Command implementation */
 
-            plot_sensors((int) flags[0], database, current);
+            plot_sensors(factory_list, (int) flags[0], database, current);
 
             /* Test */
 
