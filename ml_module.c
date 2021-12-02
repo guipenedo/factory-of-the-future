@@ -39,7 +39,8 @@ void handle_command(int commandId, char * args, char * response, int connfd, cha
         send_command_to_server(CMD_SEND_SENSOR_HISTORY_FILE, NULL, NULL, factory_client);
         receive_sensor_history_file(factory_client);
         // append data
-        append_factory_data(factId);
+        // TODO: fix
+        //append_factory_data(factId);
         // get filepaths
         get_data_file_path(factId, hours_filepath, "hours.csv");
         get_data_file_path(factId, temperatures_filepath, "temperatures.csv");
@@ -47,7 +48,7 @@ void handle_command(int commandId, char * args, char * response, int connfd, cha
         // fit
         fit(hours_filepath, temperatures_filepath, beta_filepath);
         // predict
-        double result = predict_temp(beta_filepath, hours_filepath, hours, minutes, seconds);
+        double result = predict_temp(beta_filepath, hours, minutes, seconds);
 
         sprintf(response, "%f", result);
     }
@@ -68,9 +69,6 @@ int main(int argc, char **argv) {
     printf("Starting ML module! Dashboard IP address: %s\n", dashboardAddr);
 
     connect_to_dashboard(dashboardAddr, &host_list, &host_ID, 0);
-
-    // ML init
-
 
     while(1);
 

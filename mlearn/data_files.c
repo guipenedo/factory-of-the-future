@@ -37,7 +37,7 @@ int os_copy_file(const char* source, const char* destination) {
 
 void get_data_file_path(int factoryId, char path[], const char * filename) {
     char dirname[MAX_PATH_SIZE];
-    sprintf(dirname, "./factories/factory%d", factoryId);
+    sprintf(dirname, "./factory%d", factoryId);
     // ensure directory exists
     mkdir(dirname, 0777);
     sprintf(path, "%s/%s", dirname, filename);
@@ -65,8 +65,8 @@ void append_factory_data(int factoryId) {
     int lines = read_sensor_data_from_file(data, 1000, factoryId);
     // append to datafiles
     for (int i = 0; i < lines; ++i) {
-        struct tm * tm = localtime(&data[i].time);
-        double hour = tm->tm_hour + (tm->tm_min / 60.0) + (tm->tm_sec / 3600.0);
+        struct tm tm = *localtime(&(data[i].time));
+        double hour = tm.tm_hour + (tm.tm_min / 60.0) + (tm.tm_sec / 3600.0);
         fprintf(hours_file, "%lf", hour);
         fprintf(temperatures_file, "%lf", data[i].temperature);
     }
