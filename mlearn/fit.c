@@ -4,21 +4,16 @@
 #include <stdbool.h>
 #include "csv.h"
 
-void fit(const char x_file_name[], const char y_file_name[], const bool verbose, const bool intercept)
+void fit(const char x_file_name[], const char y_file_name[], const char beta_file_name[])
 {
     int num_features = 0;
     int num_examples = 0;
 
-    int *ptr_num_features = &num_features;
-    int *ptr_num_examples = &num_examples;
+    get_matrix_dims(x_file_name, &num_features, &num_examples);
 
-    get_matrix_dims(x_file_name, ptr_num_features, ptr_num_examples);
-
-    if (intercept)
-        num_features++;
-
+    num_features++;
     gsl_matrix *X = gsl_matrix_alloc(num_examples, num_features);
-    load_matrix_from_csv(x_file_name, X, intercept);
+    load_matrix_from_csv(x_file_name, X, true);
 
     gsl_matrix *y = gsl_matrix_alloc(num_examples, 1);
     load_matrix_from_csv(y_file_name, y, false);
@@ -59,40 +54,16 @@ void fit(const char x_file_name[], const char y_file_name[], const bool verbose,
 
     double s2 = gsl_matrix_get(uTu, 0, 0) / (num_examples - num_features);
 
-    if (verbose)
-        printf("s2 = %g\n", s2);
+    printf("s2 = %g\n", s2);
 
     double correction_factor = (double)(num_examples - num_features) / num_examples;
     double sigma2 = correction_factor * s2;
 
-    if (verbose)
-        printf("sigma2 = %g\n", sigma2);
+    printf("sigma2 = %g\n", sigma2);
 
     gsl_matrix *vcov = gsl_matrix_alloc(num_features, num_features);
     gsl_matrix_memcpy(vcov, inv);
     gsl_matrix_scale(vcov, sigma2);
 
-
-    // SHOW BETA ESTIMATES
-    if (verbose)
-    {
-        printf("beta.csv generated\n");
-        /*
-        for (int i = 0; i < num_features; i++)
-            printf("est beta[%d] = %.3g (%.3g)\n", i, gsl_matrix_get(beta, i, 0), gsl_matrix_get(vcov, i, i));
-        printf("\n");
-        */
-    }
-
-    // SHOW ERRORS
-    if (verbose)
-    {    /*
-        printf("errors (y - y_hat):\n");
-        for (int i = 0; i < num_examples; i++)
-            printf("u[%d] = %.3g\n", i, gsl_matrix_get(u, i, 0));
-        printf("\n");
-        */
-    }
-
-    save_matrix_to_csv(beta, 1, num_features, "beta.csv");
+    save_matrix_to_csv(beta, 1, num_features, beta_file_name);
 }

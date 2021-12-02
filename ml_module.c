@@ -3,17 +3,14 @@
 #include "utils/host_list.h"
 #include "utils/sensor_history.h"
 #include "network/connection.h"
-#include "interfaces/peripherals.h"
-#include "utils/sensor_data_utils.h"
 
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
-#include <stdbool.h>
 
 #include "mlearn/data_files.h"
 #include "mlearn/fit.h"
-#include "mlearn/predict.h"
+#include "mlearn/predict_temp.h"
 
 host_node * host_list;
 pthread_t server_thread;
@@ -48,9 +45,9 @@ void handle_command(int commandId, char * args, char * response, int connfd, cha
         get_data_file_path(factId, temperatures_filepath, "temperatures.csv");
         get_data_file_path(factId, beta_filepath, "beta.csv");
         // fit
-        fit(hours_filepath, temperatures_filepath, true, true);
+        fit(hours_filepath, temperatures_filepath, beta_filepath);
         // predict
-        double result = predict(hours_filepath, beta_filepath, true, true);
+        double result = predict_temp(beta_filepath, hours_filepath, hours, minutes, seconds);
 
         sprintf(response, "%f", result);
     }
