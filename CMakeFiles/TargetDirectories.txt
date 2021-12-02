@@ -1,0 +1,5 @@
+/home/gui/dev/factory-of-the-future/CMakeFiles/edit_cache.dir
+/home/gui/dev/factory-of-the-future/CMakeFiles/ml.dir
+/home/gui/dev/factory-of-the-future/CMakeFiles/rebuild_cache.dir
+/home/gui/dev/factory-of-the-future/CMakeFiles/dashboard.dir
+/home/gui/dev/factory-of-the-future/CMakeFiles/factory.dir

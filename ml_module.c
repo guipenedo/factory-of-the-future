@@ -3,12 +3,14 @@
 #include "utils/host_list.h"
 #include "utils/sensor_history.h"
 #include "network/connection.h"
-#include "interfaces/peripherals.h"
-#include "utils/sensor_data_utils.h"
 
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
+
+#include "mlearn/data_files.h"
+#include "mlearn/fit.h"
+#include "mlearn/predict_temp.h"
 
 host_node * host_list;
 pthread_t server_thread;
@@ -19,22 +21,36 @@ char cmd_args[MAX_ARGS_BUFFER_SIZE];
 void handle_command(int commandId, char * args, char * response, int connfd, char * client_ip) {
     if (commandId == CMD_ANNOUNCE_NEW_HOST) {
         ClientThreadData * factory_client = connect_new_factory(args, host_list);
-        // get data file from this factory
+        create_data_files_for_factory(factory_client->host_id);
+    } else if (commandId == CMD_PREDICT) {
+        int factId, hours, minutes, seconds;
+        char hours_filepath[MAX_PATH_SIZE], temperatures_filepath[MAX_PATH_SIZE], beta_filepath[MAX_PATH_SIZE];
+
+
+        sscanf(args, "%d %d %d %d", &factId, &hours, &minutes, &seconds);
+
+        host_node * factory = get_host_by_id(host_list, factId);
+        if (factory == NULL) {
+            sprintf(response, "%f", 0.0);
+            return;
+        }
+        ClientThreadData * factory_client = factory->host;
+        // request history file
         send_command_to_server(CMD_SEND_SENSOR_HISTORY_FILE, NULL, NULL, factory_client);
         receive_sensor_history_file(factory_client);
-        // print file to test
-        SensorData * data = malloc(100 * sizeof(SensorData));
-        int lines = read_sensor_data_from_file(data, 100, factory_client->host_id);
-        printf("Read %d data lines\n", lines);
-        for (int i = 0; i < lines; ++i) {
-            printf("Ts=%ld T=%lf H=%lf P=%lf\n", data[i].time, data[i].temperature, data[i].humidity, data[i].pressure);
-        }
-        free(data);
-    } else if (commandId == CMD_SEND_SENSOR_DATA) {
-        int factId;
-        SensorData data;
-        sensor_data_from_command(args, &factId, &data);
-        // TODO
+        // append data
+        // TODO: fix
+        //append_factory_data(factId);
+        // get filepaths
+        get_data_file_path(factId, hours_filepath, "hours.csv");
+        get_data_file_path(factId, temperatures_filepath, "temperatures.csv");
+        get_data_file_path(factId, beta_filepath, "beta.csv");
+        // fit
+        fit(hours_filepath, temperatures_filepath, beta_filepath);
+        // predict
+        double result = predict_temp(beta_filepath, hours, minutes, seconds);
+
+        sprintf(response, "%f", result);
     }
 }
 
@@ -54,9 +70,7 @@ int main(int argc, char **argv) {
 
     connect_to_dashboard(dashboardAddr, &host_list, &host_ID, 0);
 
-    while(1) {
-
-    }
+    while(1);
 
     close_all_connections(host_list);
     free_host_list(host_list);

@@ -1,0 +1,77 @@
+{
+	"configurations" : 
+	[
+		{
+			"directories" : 
+			[
+				{
+					"build" : ".",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.13"
+					},
+					"projectIndex" : 0,
+					"source" : ".",
+					"targetIndexes" : 
+					[
+						0,
+						1,
+						2
+					]
+				}
+			],
+			"name" : "Debug",
+			"projects" : 
+			[
+				{
+					"directoryIndexes" : 
+					[
+						0
+					],
+					"name" : "factory_of_the_future",
+					"targetIndexes" : 
+					[
+						0,
+						1,
+						2
+					]
+				}
+			],
+			"targets" : 
+			[
+				{
+					"directoryIndex" : 0,
+					"id" : "dashboard::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-dashboard-Debug-d16ad5ce35920deb01c6.json",
+					"name" : "dashboard",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "factory::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-factory-Debug-f7952f8b5b9b78151565.json",
+					"name" : "factory",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "ml::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-ml-Debug-8b7e589d5e7c4a8cfeae.json",
+					"name" : "ml",
+					"projectIndex" : 0
+				}
+			]
+		}
+	],
+	"kind" : "codemodel",
+	"paths" : 
+	{
+		"build" : "/home/gui/dev/factory-of-the-future",
+		"source" : "/home/gui/dev/factory-of-the-future"
+	},
+	"version" : 
+	{
+		"major" : 2,
+		"minor" : 1
+	}
+}
