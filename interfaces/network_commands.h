@@ -12,5 +12,6 @@
 #define CMD_SET_LED_STATE               7 // state -> OK
 #define CMD_SET_RELAY_STATE             8 // state -> OK
 #define CMD_GET_ALARM_STATE             9 // () -> 0 or 1
+#define CMD_PREDICT                     10 // (ID, TIME) -> float
 
 #endif //FACTORY_OF_THE_FUTURE_NETWORK_COMMANDS_H
