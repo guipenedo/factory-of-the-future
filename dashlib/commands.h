@@ -14,7 +14,7 @@
 #define SETTHRESHOLD_FLAGS 2            /* SENSOR VALUE */
 #define DOWNLOAD_HISTORY_FLAGS 1        /* ID */
 #define SHOW_HISTORY_FLAGS 2            /* ID LINES */
-#define PREDICT_FLAGS 3                 /* ID SENSOR TIME */
+#define PREDICT_FLAGS 4                 /* ID HOURS MINUTES SECONDS */
 #define HELP_FLAGS 0
 
 int checkParameters (char * string);
