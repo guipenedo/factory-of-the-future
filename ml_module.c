@@ -25,32 +25,12 @@ void handle_command(int commandId, char * args, char * response, int connfd, cha
     if (commandId == CMD_ANNOUNCE_NEW_HOST) {
         ClientThreadData * factory_client = connect_new_factory(args, host_list);
         create_data_files_for_factory(factory_client->host_id);
-        // TODO
-
-        /*// get data file from this factory
-        send_command_to_server(CMD_SEND_SENSOR_HISTORY_FILE, NULL, NULL, factory_client);
-        receive_sensor_history_file(factory_client);
-        // print file to test
-        SensorData * data = malloc(100 * sizeof(SensorData));
-        int lines = read_sensor_data_from_file(data, 100, factory_client->host_id);
-        printf("Read %d data lines\n", lines);
-        for (int i = 0; i < lines; ++i) {
-            printf("Ts=%ld T=%lf H=%lf P=%lf\n", data[i].time, data[i].temperature, data[i].humidity, data[i].pressure);
-        }
-        free(data);*/
-    } /*else if (commandId == CMD_SEND_SENSOR_DATA) {
-        int factId;
-        SensorData data;
-        sensor_data_from_command(args, &factId, &data);
-        // TODO
-    }*/
-    else if (commandId == CMD_PREDICT) {
-        int factId;
-        time_t time;
+    } else if (commandId == CMD_PREDICT) {
+        int factId, hours, minutes, seconds;
         char hours_filepath[MAX_PATH_SIZE], temperatures_filepath[MAX_PATH_SIZE], beta_filepath[MAX_PATH_SIZE];
 
 
-        sscanf(args, "%d %ld", &factId, &time);
+        sscanf(args, "%d %d %d %d", &factId, &hours, &minutes, &seconds);
 
         host_node * factory = get_host_by_id(host_list, factId);
         if (factory == NULL) {
@@ -70,7 +50,7 @@ void handle_command(int commandId, char * args, char * response, int connfd, cha
         // fit
         fit(hours_filepath, temperatures_filepath, true, true);
         // predict
-        float result = predict(hours_filepath, beta_filepath, true, true);
+        double result = predict(hours_filepath, beta_filepath, true, true);
 
         sprintf(response, "%f", result);
     }
