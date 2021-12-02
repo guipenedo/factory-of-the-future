@@ -207,13 +207,13 @@ void setThreshold(int sensor, double value) {
 
         case 1:
             temperatureThreshold = value;
-
+            break;
         case 2:
             humidityThreshold = value;
-
+            break;
         case 3:
             pressureThreshold = value;
-
+            break;
         default:
             printf("[ERROR] You have not set up a new threshold\n");
 
@@ -403,7 +403,7 @@ int main (int argc, char **argv) {
 
         /* LIST PERIPHERALS COMMAND --------------------------------------------------------- */
 
-        if (strcmp (command, "listperipherals") == 0 || strcmp (command, "listsensors") == 0 || strcmp (command, "listactuators") == 0) {
+        else if (strcmp (command, "listperipherals") == 0 || strcmp (command, "listsensors") == 0 || strcmp (command, "listactuators") == 0) {
 
             /* Capture flags */
 
@@ -429,7 +429,7 @@ int main (int argc, char **argv) {
 
         /* LIST PERIPHERALS COMMAND --------------------------------------------------------- */
 
-        if (strcmp (command, "listalarms\n") == 0) {
+        else if (strcmp (command, "listalarms\n") == 0) {
 
             /* Capture flags */
 
