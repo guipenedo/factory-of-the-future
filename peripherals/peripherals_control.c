@@ -9,6 +9,7 @@
 #include <wiringPi.h>
 #include <wiringPiSPI.h>
 #include <time.h>
+#include <pthread.h>
 
 #include <string.h>
 #include <stdlib.h>
