@@ -79,6 +79,7 @@ int main(int argc, char **argv) {
 
     short sensors_enabled = has_sensors();
 
+    sleep(MEASUREMENT_PERIOD);
     while(1) {
         if (sensors_enabled && !alarm_state) {
             SensorData sensorData;

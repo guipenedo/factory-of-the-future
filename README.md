@@ -6,7 +6,7 @@ SSH into the raspberry and run the following:
 git clone https://github.com/guipenedo/factory-of-the-future.git
 cd factory-of-the-future
 sudo apt-get update
-sudo apt-get install -y cmake gnuplot
+sudo apt-get install -y cmake gnuplot-x11 libcanberra-gtk-module libcanberra-gtk3-module
 cmake .
 ```
 

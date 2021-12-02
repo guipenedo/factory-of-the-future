@@ -31,7 +31,12 @@ int plot_parameter(int factoryId, int type, database_type database, current_type
 }
 
 
-void plot_sensors(int factoryId, database_type database, current_type current) {
+void plot_sensors(host_node * factory_list, int factoryId, database_type database, current_type current) {
+    host_node * factory = get_host_by_id(factory_list, factoryId);
+    if (factory == NULL) {
+        printf("\n[ERROR] Invalid factory ID.\n");
+        return;
+    }
     for (int type = 0; type < 3; ++type) {
         plot_parameter(factoryId, type, database, current);
     }
