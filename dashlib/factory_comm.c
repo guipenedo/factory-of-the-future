@@ -69,6 +69,6 @@ void getPrediction(host_node * factory_list, ClientThreadData * ml_client, int f
 
     sprintf(cmd_args, "%d %d %d %d", fact_id, h, m, s);
     char res[MAX_BUFFER_SIZE];
-    send_command_to_server(CMD_INIT_ML, cmd_args, res, ml_client);
+    send_command_to_server(CMD_PREDICT, cmd_args, res, ml_client);
     printf("Prediction for Factory %d at %d:%d:%d = %s\n", fact_id, h, m, s, res);
 }
