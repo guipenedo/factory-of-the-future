@@ -33,3 +33,10 @@ You will need the dashboard IP to run a factory (the dashboard should be started
 make factory
 ./factory [dashboard ip address]
 ```
+
+## Running the ML Module
+You will need the dashboard IP to run a factory (the dashboard should be started before the factories):
+```bash
+make ml
+./ml [dashboard ip address]
+```

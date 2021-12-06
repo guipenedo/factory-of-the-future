@@ -28,7 +28,7 @@ void save_matrix_to_csv(const gsl_matrix *Z, const int num_features, const int n
     // free(fp);
 
     int bytes_size = sizeof(double) * num_examples * num_features;
-    printf("Data saved to %s [%d bytes]\n", file_name, bytes_size);
+//    printf("Data saved to %s [%d bytes]\n", file_name, bytes_size);
 }
 
 void get_matrix_dims(const char path[], int *num_features, int *num_examples)
@@ -80,7 +80,7 @@ void load_matrix_from_csv(const char path[], gsl_matrix *Q, const bool intercept
         exit(EXIT_FAILURE);
     }
 
-    printf("Reading %s\n", path);
+//    printf("Reading %s\n", path);
 
     const size_t LINE_SIZE = 1024 * 1024;
     char *line = malloc(LINE_SIZE);

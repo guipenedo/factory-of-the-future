@@ -6,9 +6,9 @@ RUN apt-get update && apt-get install -y cmake libgtest-dev libboost-test-dev &&
 
 COPY . /code/
 WORKDIR /code
-RUN cmake .
-RUN make factory
-RUN make dashboard
-RUN make ml
+# RUN cmake .
+# RUN make factory
+# RUN make dashboard
+# RUN make ml
 
 EXPOSE 8080

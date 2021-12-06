@@ -9,7 +9,7 @@ services:
     command: ./dashboard
   factory_1:
     image: factory-of-the-future
-    command: ./factory 172.29.0.2
+    command: ./factory 172.25.0.2
 #    volumes:
 #      - type: bind
 #        source: ./sensor_history.dat
@@ -25,7 +25,7 @@ services:
   #    - dashboard
   ml:
     image: factory-of-the-future
-    command: ./ml 172.29.0.2
+    command: ./ml 172.25.0.2
     #volumes:
     #  - ml:/code
     depends_on:

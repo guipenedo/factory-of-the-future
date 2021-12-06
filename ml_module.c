@@ -26,7 +26,6 @@ void handle_command(int commandId, char * args, char * response, int connfd, cha
         int factId, hours, minutes, seconds;
         char hours_filepath[MAX_PATH_SIZE], temperatures_filepath[MAX_PATH_SIZE], beta_filepath[MAX_PATH_SIZE];
 
-
         sscanf(args, "%d %d %d %d", &factId, &hours, &minutes, &seconds);
 
         host_node * factory = get_host_by_id(host_list, factId);
@@ -39,8 +38,7 @@ void handle_command(int commandId, char * args, char * response, int connfd, cha
         send_command_to_server(CMD_SEND_SENSOR_HISTORY_FILE, NULL, NULL, factory_client);
         receive_sensor_history_file(factory_client);
         // append data
-        // TODO: fix
-        //append_factory_data(factId);
+        append_factory_data(factId);
         // get filepaths
         get_data_file_path(factId, hours_filepath, "hours.csv");
         get_data_file_path(factId, temperatures_filepath, "temperatures.csv");

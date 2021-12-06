@@ -85,6 +85,7 @@ void send_sensor_history_file(SensorHistoryWriteBuffer * data_buffer, int connfd
     FILE *fp = fopen(SENSOR_HISTORY_FILENAME, "rb");
     if (fp == NULL) {
         fprintf(stderr, "Error opening sensor data\n");
+        data[0] = EOF;
         write(connfd, data, 1);
         pthread_mutex_unlock(&(data_buffer->data_mutex));
         return;
@@ -99,6 +100,8 @@ void send_sensor_history_file(SensorHistoryWriteBuffer * data_buffer, int connfd
     }
     data[0] = EOF;
     write(connfd, data, 1);
+
+    fclose(fp);
 
     pthread_mutex_unlock(&(data_buffer->data_mutex));
 }
@@ -115,6 +118,10 @@ void receive_sensor_history_file(ClientThreadData * data) {
 
     do {
         n = read(data->sockfd, buffer, SEND_DATA_SIZE);
+
+        if (buffer[0] == EOF)
+            break;
+
         fwrite(buffer, 1, n, fp);
         bzero(buffer, SEND_DATA_SIZE);
     } while(n == SEND_DATA_SIZE);
