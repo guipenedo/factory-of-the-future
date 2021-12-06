@@ -1,3 +1,7 @@
+/*
+ * Taken from https://github.com/alessandrobessi/fast-linear-regression/
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
