@@ -1,3 +1,5 @@
+# This Dockerfile is only used for testing purposes (simulating multiple machines on the same computer)
+
 FROM gcc:9.2
 
 ENV DEBIAN_FRONTEND noninteractive
