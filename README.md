@@ -1,5 +1,8 @@
 # factory-of-the-future
 
+## Introduction
+This project was developed for the **2MAE501: Architecture and Programming** course of ISAE-SUPAERO's Embedded Systems Major. It consists of factories, a dashboard and a machine learning module, each running on a different raspberrypi.
+
 ## Setting up on a raspberry
 SSH into the raspberry and run the following:
 ```bash
